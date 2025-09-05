@@ -137,6 +137,97 @@
     <script src="js/ui.js"></script>
     <script src="js/auth.js"></script>
     <script>
+        // Validation function to check user details against approved users
+        async function validateUserDetails() {
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const role = document.getElementById('role').value;
+            const department = document.getElementById('department').value;
+            
+            // Only validate if all required fields are filled
+            if (!name || !email || !role || !department) {
+                return;
+            }
+            
+            try {
+                const backendUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8000' 
+                    : 'https://aru-academy-backend.onrender.com';
+                
+                const response = await fetch(`${backendUrl}/api/auth/validate-approved-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        role: role,
+                        department_id: parseInt(department)
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    if (result.error_type === 'role_mismatch') {
+                        showAlert(result.error, 'error');
+                        // Highlight the role field
+                        const roleField = document.getElementById('role');
+                        roleField.style.borderColor = '#e74c3c';
+                        roleField.style.borderWidth = '2px';
+                        roleField.focus();
+                        return false;
+                    } else if (result.error_type === 'department_mismatch') {
+                        showAlert(result.error, 'error');
+                        // Highlight the department field
+                        const deptField = document.getElementById('department');
+                        deptField.style.borderColor = '#e74c3c';
+                        deptField.style.borderWidth = '2px';
+                        deptField.focus();
+                        return false;
+                    } else if (result.error_type === 'not_approved') {
+                        showAlert(result.error, 'error');
+                        return false;
+                    }
+                } else {
+                    // Clear any error styling
+                    const roleField = document.getElementById('role');
+                    const deptField = document.getElementById('department');
+                    roleField.style.borderColor = '';
+                    roleField.style.borderWidth = '';
+                    deptField.style.borderColor = '';
+                    deptField.style.borderWidth = '';
+                    return true;
+                }
+            } catch (error) {
+                console.error('Validation error:', error);
+                return true; // Don't block registration on validation errors
+            }
+        }
+        
+        // Add event listeners for validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const nameField = document.getElementById('name');
+            const emailField = document.getElementById('email');
+            const roleField = document.getElementById('role');
+            const departmentField = document.getElementById('department');
+            
+            // Validate when role or department changes (with debounce)
+            let validationTimeout;
+            function debouncedValidation() {
+                clearTimeout(validationTimeout);
+                validationTimeout = setTimeout(validateUserDetails, 500);
+            }
+            
+            roleField.addEventListener('change', debouncedValidation);
+            departmentField.addEventListener('change', debouncedValidation);
+            
+            // Also validate when name or email changes (with debounce)
+            nameField.addEventListener('input', debouncedValidation);
+            emailField.addEventListener('input', debouncedValidation);
+        });
+        
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -175,6 +266,12 @@
             }
 
             try {
+                // Validate user details before submitting
+                const isValid = await validateUserDetails();
+                if (!isValid) {
+                    return; // Stop submission if validation fails
+                }
+                
                 showLoading();
                 
                 const backendUrl = window.location.hostname === 'localhost' 

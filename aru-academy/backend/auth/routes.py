@@ -15,6 +15,76 @@ from models.department import Department
 auth_bp = Blueprint('auth', __name__)
 auth_service = AuthService()
 
+@auth_bp.route('/validate-approved-user', methods=['POST'])
+def validate_approved_user():
+    """Validate user details against approved users table"""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['name', 'email', 'role', 'department_id']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'success': False, 'error': f'{field} is required'}), 400
+        
+        name = data.get('name').strip()
+        email = data.get('email').strip().lower()
+        role = data.get('role')
+        department_id = int(data.get('department_id'))
+        
+        # Check if user exists in approved users table
+        approved_user = ApprovedUser.query.filter_by(
+            email=email,
+            name=name
+        ).first()
+        
+        if not approved_user:
+            return jsonify({
+                'success': False, 
+                'error': 'You need permission from ARU Academy to register. Please contact the administrator.',
+                'error_type': 'not_approved'
+            }), 403
+        
+        # Check if role matches
+        if approved_user.role != role:
+            return jsonify({
+                'success': False,
+                'error': f'Your approved role is "{approved_user.role}", but you selected "{role}". Please select the correct role.',
+                'error_type': 'role_mismatch',
+                'approved_role': approved_user.role,
+                'selected_role': role
+            }), 400
+        
+        # Check if department matches
+        if approved_user.department_id != department_id:
+            # Get department names for better error message
+            approved_dept = Department.query.get(approved_user.department_id)
+            selected_dept = Department.query.get(department_id)
+            
+            return jsonify({
+                'success': False,
+                'error': f'Your approved department is "{approved_dept.name if approved_dept else "Unknown"}", but you selected "{selected_dept.name if selected_dept else "Unknown"}". Please select the correct department.',
+                'error_type': 'department_mismatch',
+                'approved_department': approved_dept.name if approved_dept else "Unknown",
+                'selected_department': selected_dept.name if selected_dept else "Unknown"
+            }), 400
+        
+        # All validations passed
+        return jsonify({
+            'success': True,
+            'message': 'User details validated successfully',
+            'approved_user': {
+                'name': approved_user.name,
+                'email': approved_user.email,
+                'role': approved_user.role,
+                'department_id': approved_user.department_id
+            }
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error validating approved user: {e}")
+        return jsonify({'success': False, 'error': 'An error occurred during validation'}), 500
+
 @auth_bp.route('/self-register', methods=['POST'])
 def self_register():
     """Self-register user by checking database for existing info"""
