@@ -139,12 +139,11 @@ def create_approved_users():
         from datetime import datetime
         from sqlalchemy.exc import IntegrityError
         
-        # Check if approved users already exist (skip if any exist to avoid duplicates)
-        required_emails = ['new.student@example.com', 'new.instructor@example.com']
+        # Check if any approved users already exist (skip creation entirely if any exist)
         try:
-            existing_approved = ApprovedUser.query.filter(ApprovedUser.email.in_(required_emails)).all()
-            if existing_approved:
-                print(f"✅ Found {len(existing_approved)} existing approved users. Skipping creation to avoid duplicates.")
+            existing_count = ApprovedUser.query.count()
+            if existing_count > 0:
+                print(f"✅ Found {existing_count} existing approved users. Skipping creation to avoid duplicates.")
                 return
         except Exception as e:
             if "Unknown column 'approved_users.name'" in str(e):
@@ -152,9 +151,9 @@ def create_approved_users():
                 recreate_approved_users_table()
                 print("✅ approved_users table recreated successfully")
                 # Check again after recreation
-                existing_approved = ApprovedUser.query.filter(ApprovedUser.email.in_(required_emails)).all()
-                if existing_approved:
-                    print(f"✅ Found {len(existing_approved)} existing approved users after recreation. Skipping creation.")
+                existing_count = ApprovedUser.query.count()
+                if existing_count > 0:
+                    print(f"✅ Found {existing_count} existing approved users after recreation. Skipping creation.")
                     return
             else:
                 raise e
@@ -187,9 +186,7 @@ def create_approved_users():
             db.session.commit()
             print("✅ Created admin user")
         
-        # Create approved users for ALL departments (check for duplicates)
-        approved_emails = ['new.student@example.com', 'new.instructor@example.com']
-        
+        # Create approved users for ALL departments with unique emails
         # Get all departments to create approved users for each
         all_departments = Department.query.all()
         if not all_departments:
@@ -213,36 +210,42 @@ def create_approved_users():
         # Use no_autoflush to prevent premature flushing during duplicate checks
         with db.session.no_autoflush:
             for dept in all_departments:
-                for email in approved_emails:
+                # Create unique emails for each department
+                student_email = f'new.student.{dept.name.lower().replace(" ", ".")}@example.com'
+                instructor_email = f'new.instructor.{dept.name.lower().replace(" ", ".")}@example.com'
+                
+                approved_emails = [
+                    {'email': student_email, 'role': 'Student', 'name': f'New Student - {dept.name}'},
+                    {'email': instructor_email, 'role': 'Instructor', 'name': f'New Instructor - {dept.name}'}
+                ]
+                
+                for user_data in approved_emails:
                     try:
-                        existing = ApprovedUser.query.filter_by(email=email, department_id=dept.id).first()
+                        existing = ApprovedUser.query.filter_by(email=user_data['email']).first()
                     except Exception as e:
                         if "Unknown column 'approved_users.name'" in str(e):
                             print("⚠️  approved_users table has wrong structure - recreating automatically...")
                             recreate_approved_users_table()
                             print("✅ approved_users table recreated successfully")
                             # Try again after recreation
-                            existing = ApprovedUser.query.filter_by(email=email, department_id=dept.id).first()
+                            existing = ApprovedUser.query.filter_by(email=user_data['email']).first()
                         else:
                             raise e
                     
                     if not existing:
-                        role = 'Student' if 'student' in email else 'Instructor'
-                        name = 'New Student' if 'student' in email else 'New Instructor'
-                        
                         # Create approved user with correct structure
                         approved_user = ApprovedUser(
-                            name=name,
-                            email=email,
-                            role=role,
+                            name=user_data['name'],
+                            email=user_data['email'],
+                            role=user_data['role'],
                             department_id=dept.id,
                             approved_by=admin.id,
                             approved_at=datetime.utcnow()
                         )
                         db.session.add(approved_user)
-                        print(f"✅ Created approved user: {email} for {dept.name}")
+                        print(f"✅ Created approved user: {user_data['email']} for {dept.name}")
                     else:
-                        print(f"✅ Approved user already exists: {email} for {dept.name}")
+                        print(f"✅ Approved user already exists: {user_data['email']} for {dept.name}")
         
         # Commit all changes at once
         try:
@@ -255,8 +258,9 @@ def create_approved_users():
         
         total_approved = ApprovedUser.query.count()
         print(f"✅ Created {total_approved} approved users for registration")
-        print("   - new.student@example.com (student) for all departments")
-        print("   - new.instructor@example.com (instructor) for all departments")
+        print("   - Unique student and instructor emails for each department")
+        print("   - Format: new.student.{department}@example.com")
+        print("   - Format: new.instructor.{department}@example.com")
         print("✅ Approved users created/verified.")
         
     except IntegrityError as e:
