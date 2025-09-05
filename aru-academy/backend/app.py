@@ -130,128 +130,147 @@ def recreate_approved_users_table():
         db.session.rollback()
         raise e
 
-def create_approved_users():
-    """Create approved users for registration if they don't exist"""
-    try:
-        from models.department import Department
-        from models.user import User, UserRole, UserStatus
-        from models.approved_user import ApprovedUser
-        from datetime import datetime
-        
-        # Check if the specific approved users for registration exist
-        required_emails = ['new.student@example.com', 'new.instructor@example.com']
+    def create_approved_users():
+        """Create approved users for registration if they don't exist"""
         try:
-            existing_approved = ApprovedUser.query.filter(ApprovedUser.email.in_(required_emails)).all()
-            existing_emails = [au.email for au in existing_approved]
-        except Exception as e:
-            if "Unknown column 'approved_users.name'" in str(e):
-                print("⚠️  approved_users table has wrong structure - recreating automatically...")
-                recreate_approved_users_table()
-                print("✅ approved_users table recreated successfully")
-                # Try again after recreation
+            from models.department import Department
+            from models.user import User, UserRole, UserStatus
+            from models.approved_user import ApprovedUser
+            from datetime import datetime
+            from sqlalchemy.exc import IntegrityError
+            
+            # Check if approved users already exist (skip if any exist to avoid duplicates)
+            required_emails = ['new.student@example.com', 'new.instructor@example.com']
+            try:
                 existing_approved = ApprovedUser.query.filter(ApprovedUser.email.in_(required_emails)).all()
-                existing_emails = [au.email for au in existing_approved]
-            else:
-                raise e
-        
-        if len(existing_emails) == len(required_emails):
-            print("✅ Required approved users already exist.")
-            return
-        
-        print("🌱 Creating approved users for registration...")
-        
-        # Get or create CS department
-        cs_dept = Department.query.filter_by(name='Computer Science').first()
-        if not cs_dept:
-            cs_dept = Department(
-                name='Computer Science',
-                description='Computer Science and Software Engineering programs'
-            )
-            db.session.add(cs_dept)
-            db.session.commit()
-            print("✅ Created Computer Science department")
-        
-        # Get or create admin user
-        admin = User.query.filter_by(email='admin@aru.academy').first()
-        if not admin:
-            admin = User(
-                name='System Administrator',
-                email='admin@aru.academy',
-                role=UserRole.ADMIN,
-                department_id=cs_dept.id,
-                status=UserStatus.ACTIVE
-            )
-            admin.set_password('Admin@123')
-            db.session.add(admin)
-            db.session.commit()
-            print("✅ Created admin user")
-        
-        # Create approved users for ALL departments (check for duplicates)
-        approved_emails = ['new.student@example.com', 'new.instructor@example.com']
-        
-        # Get all departments to create approved users for each
-        all_departments = Department.query.all()
-        if not all_departments:
-            # If no departments exist yet, create them first
-            print("🌱 Creating departments for approved users...")
-            departments_data = [
-                {'name': 'Computer Science', 'description': 'Computer Science and Software Engineering programs'},
-                {'name': 'Electrical Engineering', 'description': 'Electrical and Electronics Engineering programs'},
-                {'name': 'Mechanical Engineering', 'description': 'Mechanical and Manufacturing Engineering programs'},
-                {'name': 'Business Administration', 'description': 'Business and Management programs'}
-            ]
-            
-            for dept_data in departments_data:
-                dept = Department(**dept_data)
-                db.session.add(dept)
-                print(f"✅ Created department: {dept_data['name']}")
-            
-            db.session.commit()
-            all_departments = Department.query.all()
-        
-        for dept in all_departments:
-            for email in approved_emails:
-                try:
-                    existing = ApprovedUser.query.filter_by(email=email, department_id=dept.id).first()
-                except Exception as e:
-                    if "Unknown column 'approved_users.name'" in str(e):
-                        print("⚠️  approved_users table has wrong structure - recreating automatically...")
-                        recreate_approved_users_table()
-                        print("✅ approved_users table recreated successfully")
-                        # Try again after recreation
-                        existing = ApprovedUser.query.filter_by(email=email, department_id=dept.id).first()
-                    else:
-                        raise e
-                
-                if not existing:
-                    role = 'Student' if 'student' in email else 'Instructor'
-                    name = 'New Student' if 'student' in email else 'New Instructor'
-                    
-                    # Create approved user with correct structure
-                    approved_user = ApprovedUser(
-                        name=name,
-                        email=email,
-                        role=role,
-                        department_id=dept.id,
-                        approved_by=admin.id,
-                        approved_at=datetime.utcnow()
-                    )
-                    db.session.add(approved_user)
-                    print(f"✅ Created approved user: {email} for {dept.name}")
+                if existing_approved:
+                    print(f"✅ Found {len(existing_approved)} existing approved users. Skipping creation to avoid duplicates.")
+                    return
+            except Exception as e:
+                if "Unknown column 'approved_users.name'" in str(e):
+                    print("⚠️  approved_users table has wrong structure - recreating automatically...")
+                    recreate_approved_users_table()
+                    print("✅ approved_users table recreated successfully")
+                    # Check again after recreation
+                    existing_approved = ApprovedUser.query.filter(ApprovedUser.email.in_(required_emails)).all()
+                    if existing_approved:
+                        print(f"✅ Found {len(existing_approved)} existing approved users after recreation. Skipping creation.")
+                        return
                 else:
-                    print(f"✅ Approved user already exists: {email} for {dept.name}")
+                    raise e
+            
+            print("🌱 Creating approved users for registration...")
+            
+            # Get or create CS department
+            cs_dept = Department.query.filter_by(name='Computer Science').first()
+            if not cs_dept:
+                cs_dept = Department(
+                    name='Computer Science',
+                    description='Computer Science and Software Engineering programs'
+                )
+                db.session.add(cs_dept)
+                db.session.commit()
+                print("✅ Created Computer Science department")
+            
+            # Get or create admin user
+            admin = User.query.filter_by(email='admin@aru.academy').first()
+            if not admin:
+                admin = User(
+                    name='System Administrator',
+                    email='admin@aru.academy',
+                    role=UserRole.ADMIN,
+                    department_id=cs_dept.id,
+                    status=UserStatus.ACTIVE
+                )
+                admin.set_password('Admin@123')
+                db.session.add(admin)
+                db.session.commit()
+                print("✅ Created admin user")
+            
+            # Create approved users for ALL departments (check for duplicates)
+            approved_emails = ['new.student@example.com', 'new.instructor@example.com']
+            
+            # Get all departments to create approved users for each
+            all_departments = Department.query.all()
+            if not all_departments:
+                # If no departments exist yet, create them first
+                print("🌱 Creating departments for approved users...")
+                departments_data = [
+                    {'name': 'Computer Science', 'description': 'Computer Science and Software Engineering programs'},
+                    {'name': 'Electrical Engineering', 'description': 'Electrical and Electronics Engineering programs'},
+                    {'name': 'Mechanical Engineering', 'description': 'Mechanical and Manufacturing Engineering programs'},
+                    {'name': 'Business Administration', 'description': 'Business and Management programs'}
+                ]
+                
+                for dept_data in departments_data:
+                    dept = Department(**dept_data)
+                    db.session.add(dept)
+                    print(f"✅ Created department: {dept_data['name']}")
+                
+                db.session.commit()
+                all_departments = Department.query.all()
+            
+            # Use no_autoflush to prevent premature flushing during duplicate checks
+            with db.session.no_autoflush:
+                for dept in all_departments:
+                    for email in approved_emails:
+                        try:
+                            existing = ApprovedUser.query.filter_by(email=email, department_id=dept.id).first()
+                        except Exception as e:
+                            if "Unknown column 'approved_users.name'" in str(e):
+                                print("⚠️  approved_users table has wrong structure - recreating automatically...")
+                                recreate_approved_users_table()
+                                print("✅ approved_users table recreated successfully")
+                                # Try again after recreation
+                                existing = ApprovedUser.query.filter_by(email=email, department_id=dept.id).first()
+                            else:
+                                raise e
+                        
+                        if not existing:
+                            role = 'Student' if 'student' in email else 'Instructor'
+                            name = 'New Student' if 'student' in email else 'New Instructor'
+                            
+                            # Create approved user with correct structure
+                            approved_user = ApprovedUser(
+                                name=name,
+                                email=email,
+                                role=role,
+                                department_id=dept.id,
+                                approved_by=admin.id,
+                                approved_at=datetime.utcnow()
+                            )
+                            db.session.add(approved_user)
+                            print(f"✅ Created approved user: {email} for {dept.name}")
+                        else:
+                            print(f"✅ Approved user already exists: {email} for {dept.name}")
+            
+            # Commit all changes at once
+            try:
+                db.session.commit()
+                print("✅ Successfully committed all approved users")
+            except Exception as e:
+                db.session.rollback()
+                print(f"❌ Error committing approved users: {e}")
+                raise e
+            
+            total_approved = ApprovedUser.query.count()
+            print(f"✅ Created {total_approved} approved users for registration")
+            print("   - new.student@example.com (student) for all departments")
+            print("   - new.instructor@example.com (instructor) for all departments")
+            print("✅ Approved users created/verified.")
         
-        db.session.commit()
-        
-        total_approved = ApprovedUser.query.count()
-        print(f"✅ Created {total_approved} approved users for registration")
-        print("   - new.student@example.com (student) for all departments")
-        print("   - new.instructor@example.com (instructor) for all departments")
-        
-    except Exception as e:
-        print(f"❌ Error creating approved users: {str(e)}")
+    except IntegrityError as e:
         db.session.rollback()
-        raise
+        if "Duplicate entry" in str(e):
+            print("⚠️  Duplicate entry detected - approved users may already exist. Skipping creation.")
+            print("✅ Approved users verification completed.")
+        else:
+            print(f"❌ Database integrity error creating approved users: {e}")
+            raise e
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error creating approved users: {e}")
+        raise e
 
 def seed_database_if_empty():
     """Seed database with initial data if it's empty"""
