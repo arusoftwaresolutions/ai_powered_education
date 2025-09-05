@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ARU Academy</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="dashboard.html">
+                        <h1>ARU Academy</h1>
+                    </a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                        <li><a href="ai-tutor.html">AI Tutor</a></li>
+                        <li id="adminLink" style="display: none;"><a href="admin.html">Admin</a></li>
+                    </ul>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span id="userName">Loading...</span>
+                        <span class="user-role" id="userRole">Loading...</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="dropdown-toggle" id="userMenuToggle">
+                            <span class="avatar">👤</span>
+                        </button>
+                        <div class="dropdown-menu" id="userMenu">
+                            <a href="profile.html">Profile</a>
+                            <a href="#" id="logoutBtn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="dashboard-section">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div class="welcome-section">
+                        <h1>Welcome back, <span id="welcomeName" class="highlight">Student</span>! 👋</h1>
+                        <p class="subtitle">Here's what's happening in your learning journey today.</p>
+                    </div>
+                    <div class="quick-actions">
+                        <button class="btn btn-primary" onclick="window.location.href='courses.html'">
+                            <span class="icon">📚</span> Browse Courses
+                        </button>
+                        <button class="btn btn-secondary" onclick="window.location.href='ai-tutor.html'">
+                            <span class="icon">🤖</span> Ask AI Tutor
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Student Dashboard -->
+                <div id="studentDashboard" style="display: none;">
+                    <div class="stats-grid">
+                        <div class="stat-card modern-card">
+                            <div class="stat-header">
+                                <div class="stat-icon">📚</div>
+                                <div class="stat-trend positive">+12%</div>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Enrolled Courses</h3>
+                                <span class="stat-number" id="enrolledCourses">0</span>
+                                <p class="stat-description">Active learning paths</p>
+                            </div>
+                        </div>
+                        <div class="stat-card modern-card">
+                            <div class="stat-header">
+                                <div class="stat-icon">✅</div>
+                                <div class="stat-trend positive">+3</div>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Completed Courses</h3>
+                                <span class="stat-number" id="completedCourses">0</span>
+                                <p class="stat-description">Achievements unlocked</p>
+                            </div>
+                        </div>
+                        <div class="stat-card modern-card">
+                            <div class="stat-header">
+                                <div class="stat-icon">🤖</div>
+                                <div class="stat-trend neutral">-</div>
+                            </div>
+                            <div class="stat-content">
+                                <h3>AI Interactions</h3>
+                                <span class="stat-number" id="aiQuestionsAsked">0</span>
+                                <p class="stat-description">Questions answered</p>
+                            </div>
+                        </div>
+                        <div class="stat-card modern-card">
+                            <div class="stat-header">
+                                <div class="stat-icon">🎯</div>
+                                <div class="stat-trend positive">85%</div>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Learning Progress</h3>
+                                <span class="stat-number">85%</span>
+                                <p class="stat-description">Overall completion</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card modern-card">
+                            <div class="card-header">
+                                <h3>📈 Recent Progress</h3>
+                                <button class="btn btn-sm btn-outline">View All</button>
+                            </div>
+                            <div class="card-content">
+                                <div id="recentProgress">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">📊</div>
+                                        <p>No recent progress to display.</p>
+                                        <button class="btn btn-primary btn-sm">Start Learning</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card modern-card">
+                            <div class="card-header">
+                                <h3>📝 Upcoming Quizzes</h3>
+                                <button class="btn btn-sm btn-outline">View All</button>
+                            </div>
+                            <div class="card-content">
+                                <div id="upcomingQuizzes">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">📋</div>
+                                        <p>No upcoming quizzes.</p>
+                                        <button class="btn btn-primary btn-sm">Take Quiz</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card modern-card">
+                            <div class="card-header">
+                                <h3>🤖 AI Tutor</h3>
+                                <button class="btn btn-sm btn-outline" onclick="window.location.href='ai-tutor.html'">Ask Question</button>
+                            </div>
+                            <div class="card-content">
+                                <p>Get help with your studies using our AI-powered tutor</p>
+                                <div class="ai-stats">
+                                    <span class="stat-number" id="aiQuestionsAsked">0</span>
+                                    <span class="stat-label">Questions Asked</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructor Dashboard -->
+                <div id="instructorDashboard" style="display: none;">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3>My Courses</h3>
+                                <a href="courses.html" class="btn btn-sm btn-outline">Manage Courses</a>
+                            </div>
+                            <div class="card-content">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="instructorCourses">0</span>
+                                        <span class="stat-label">Active Courses</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="totalStudents">0</span>
+                                        <span class="stat-label">Total Students</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3>Recent Activity</h3>
+                            </div>
+                            <div class="card-content">
+                                <div id="instructorActivity">
+                                    <p class="text-muted">No recent activity</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3>Quick Actions</h3>
+                            </div>
+                            <div class="card-content">
+                                <div class="action-buttons">
+                                    <a href="courses.html?action=create" class="btn btn-primary">Create Course</a>
+                                    <a href="courses.html?action=upload" class="btn btn-outline">Upload Resource</a>
+                                    <a href="quizzes.html?action=create" class="btn btn-outline">Create Quiz</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3>Analytics</h3>
+                            </div>
+                            <div class="card-content">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="resourcesUploaded">0</span>
+                                        <span class="stat-label">Resources</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="quizzesCreated">0</span>
+                                        <span class="stat-label">Quizzes</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Dashboard -->
+                <div id="adminDashboard" style="display: none;">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3>System Overview</h3>
+                                <a href="admin.html" class="btn btn-sm btn-outline">Full Dashboard</a>
+                            </div>
+                            <div class="card-content">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="totalUsers">0</span>
+                                        <span class="stat-label">Total Users</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="pendingApprovals">0</span>
+                                        <span class="stat-label">Pending</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3>Quick Actions</h3>
+                            </div>
+                            <div class="card-content">
+                                <div class="action-buttons">
+                                    <a href="admin.html#users" class="btn btn-primary">Manage Users</a>
+                                    <a href="admin.html#departments" class="btn btn-outline">Departments</a>
+                                    <a href="admin.html#analytics" class="btn btn-outline">Analytics</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3>System Health</h3>
+                            </div>
+                            <div class="card-content">
+                                <div id="systemHealth">
+                                    <div class="health-item">
+                                        <span class="health-status" id="dbStatus">🔄</span>
+                                        <span>Database</span>
+                                    </div>
+                                    <div class="health-item">
+                                        <span class="health-status" id="aiStatus">🔄</span>
+                                        <span>AI Service</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3>Recent Activity</h3>
+                            </div>
+                            <div class="card-content">
+                                <div id="adminActivity">
+                                    <p class="text-muted">No recent activity</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ARU Academy</h3>
+                    <p>Empowering education through technology and innovation.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@aru.academy</p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ARU Academy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // Check authentication
+        console.log('Dashboard: Checking authentication...');
+        console.log('Dashboard: User in localStorage:', localStorage.getItem('user'));
+        console.log('Dashboard: Token in localStorage:', localStorage.getItem('token'));
+        
+        if (!localStorage.getItem('user')) {
+            console.log('Dashboard: No user found, redirecting to login');
+            window.location.href = 'login.html';
+        }
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userRole = user.role;
+        console.log('Dashboard: User role:', userRole);
+
+        // Update UI based on user role
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userRole').textContent = userRole;
+        document.getElementById('welcomeName').textContent = user.name;
+
+        // Show appropriate dashboard
+        if (userRole === 'Admin') {
+            document.getElementById('adminDashboard').style.display = 'block';
+            document.getElementById('adminLink').style.display = 'block';
+        } else if (userRole === 'Instructor') {
+            document.getElementById('instructorDashboard').style.display = 'block';
+        } else {
+            document.getElementById('studentDashboard').style.display = 'block';
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                if (userRole === 'Student') {
+                    await loadStudentDashboard();
+                } else if (userRole === 'Instructor') {
+                    await loadInstructorDashboard();
+                } else if (userRole === 'Admin') {
+                    await loadAdminDashboard();
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showAlert('Failed to load dashboard data. Please refresh the page.', 'error');
+            }
+        }
+
+        async function loadStudentDashboard() {
+            try {
+                // Load student-specific data with error handling
+                const [courses, progress, quizzes, aiLogs] = await Promise.all([
+                    api.get('/api/courses/').catch(() => ({ success: false, data: [] })),
+                    api.get('/api/resources/progress').catch(() => ({ success: false, data: [] })),
+                    api.get('/api/quizzes/').catch(() => ({ success: false, data: [] })),
+                    api.get('/api/ai/logs').catch(() => ({ success: false, data: [] }))
+                ]);
+
+                if (courses.success) {
+                    document.getElementById('enrolledCourses').textContent = courses.data.length;
+                    const completed = courses.data.filter(c => c.progress === 100).length;
+                    document.getElementById('completedCourses').textContent = completed;
+                }
+
+                if (progress.success && progress.data.length > 0) {
+                    const recent = progress.data.slice(0, 3);
+                    document.getElementById('recentProgress').innerHTML = recent.map(p => 
+                        `<div class="progress-item">
+                            <span>${p.resource_title}</span>
+                            <span class="badge badge-${p.status === 'Completed' ? 'success' : 'warning'}">${p.status}</span>
+                        </div>`
+                    ).join('');
+                }
+
+                if (quizzes.success) {
+                    const upcoming = quizzes.data.filter(q => new Date(q.created_at) > new Date()).slice(0, 3);
+                    if (upcoming.length > 0) {
+                        document.getElementById('upcomingQuizzes').innerHTML = upcoming.map(q =>
+                            `<div class="quiz-item">
+                                <span>${q.title}</span>
+                                <span class="badge badge-info">${q.course_title}</span>
+                            </div>`
+                        ).join('');
+                    }
+                }
+
+                if (aiLogs.success) {
+                    document.getElementById('aiQuestionsAsked').textContent = aiLogs.data.length;
+                }
+            } catch (error) {
+                console.error('Error loading student dashboard:', error);
+                // Set default values to prevent empty display
+                document.getElementById('enrolledCourses').textContent = '0';
+                document.getElementById('completedCourses').textContent = '0';
+                document.getElementById('aiQuestionsAsked').textContent = '0';
+            }
+        }
+
+        async function loadInstructorDashboard() {
+            try {
+                // Load instructor-specific data with error handling
+                const [courses, resources, quizzes] = await Promise.all([
+                    api.get('/api/courses/').catch(() => ({ success: false, data: [] })),
+                    api.get('/api/resources/').catch(() => ({ success: false, data: [] })),
+                    api.get('/api/quizzes/').catch(() => ({ success: false, data: [] }))
+                ]);
+
+                if (courses.success) {
+                    document.getElementById('instructorCourses').textContent = courses.data.length;
+                    const totalStudents = courses.data.reduce((sum, c) => sum + (c.student_count || 0), 0);
+                    document.getElementById('totalStudents').textContent = totalStudents;
+                }
+
+                if (resources.success) {
+                    document.getElementById('resourcesUploaded').textContent = resources.data.length;
+                }
+
+                if (quizzes.success) {
+                    document.getElementById('quizzesCreated').textContent = quizzes.data.length;
+                }
+            } catch (error) {
+                console.error('Error loading instructor dashboard:', error);
+                // Set default values
+                document.getElementById('instructorCourses').textContent = '0';
+                document.getElementById('totalStudents').textContent = '0';
+                document.getElementById('resourcesUploaded').textContent = '0';
+                document.getElementById('quizzesCreated').textContent = '0';
+            }
+        }
+
+        async function loadAdminDashboard() {
+            try {
+                // Load admin-specific data with error handling
+                const [stats, health] = await Promise.all([
+                    api.get('/api/admin/dashboard').catch(() => ({ success: false, data: {} })),
+                    api.get('/api/admin/system-health').catch(() => ({ success: false, data: {} }))
+                ]);
+
+                if (stats.success) {
+                    document.getElementById('totalUsers').textContent = stats.data.total_users || '0';
+                    document.getElementById('pendingApprovals').textContent = stats.data.pending_users || '0';
+                }
+
+                if (health.success) {
+                    document.getElementById('dbStatus').textContent = health.data.database === 'healthy' ? '✅' : '❌';
+                    document.getElementById('aiStatus').textContent = health.data.ai_service === 'healthy' ? '✅' : '🔄';
+                }
+            } catch (error) {
+                console.error('Error loading admin dashboard:', error);
+                // Set default values
+                document.getElementById('totalUsers').textContent = '0';
+                document.getElementById('pendingApprovals').textContent = '0';
+                document.getElementById('dbStatus').textContent = '❌';
+                document.getElementById('aiStatus').textContent = '❌';
+            }
+        }
+
+        // Initialize dashboard
+        loadDashboardData();
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            try {
+                // Use the auth service for proper logout
+                const authService = new AuthService();
+                await authService.logout();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                // Force logout anyway
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // User menu toggle
+        document.getElementById('userMenuToggle').addEventListener('click', function() {
+            document.getElementById('userMenu').classList.toggle('show');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.getElementById('userMenu').classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
+

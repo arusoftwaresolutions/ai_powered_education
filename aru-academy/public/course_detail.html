@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Detail - ARU Academy</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="dashboard.html">
+                        <h1>ARU Academy</h1>
+                    </a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                        <li><a href="ai-tutor.html">AI Tutor</a></li>
+                        <li id="adminLink" style="display: none;"><a href="admin.html">Admin</a></li>
+                    </ul>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span id="userName">Loading...</span>
+                        <span class="user-role" id="userRole">Loading...</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="dropdown-toggle" id="userMenuToggle">
+                            <span class="avatar">👤</span>
+                        </button>
+                        <div class="dropdown-menu" id="userMenu">
+                            <a href="profile.html">Profile</a>
+                            <a href="#" id="logoutBtn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="course-detail-section">
+            <div class="container">
+                <!-- Course Header -->
+                <div class="course-header" id="courseHeader">
+                    <div class="course-info">
+                        <div class="breadcrumb">
+                            <a href="courses.html">Courses</a> / <span id="courseTitle">Loading...</span>
+                        </div>
+                        <h1 id="courseTitleMain">Course Title</h1>
+                        <p id="courseDescription">Course description loading...</p>
+                        <div class="course-meta">
+                            <span class="meta-item">
+                                <strong>Department:</strong> <span id="courseDepartment">Loading...</span>
+                            </span>
+                            <span class="meta-item">
+                                <strong>Instructor:</strong> <span id="courseInstructor">Loading...</span>
+                            </span>
+                            <span class="meta-item">
+                                <strong>Resources:</strong> <span id="courseResources">0</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="course-actions" id="instructorActions" style="display: none;">
+                        <button class="btn btn-primary" id="addResourceBtn">Add Resource</button>
+                        <button class="btn btn-outline" id="editCourseBtn">Edit Course</button>
+                        <button class="btn btn-outline" id="createQuizBtn">Create Quiz</button>
+                    </div>
+                </div>
+
+                <!-- Course Progress (Students) -->
+                <div class="course-progress" id="studentProgress" style="display: none;">
+                    <div class="progress-overview">
+                        <h3>Your Progress</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-stats">
+                            <span class="progress-text" id="progressText">0% Complete</span>
+                            <span class="progress-details" id="progressDetails">0 of 0 resources completed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Content -->
+                <div class="course-content">
+                    <div class="content-tabs">
+                        <button class="tab-btn active" data-tab="resources">Resources</button>
+                        <button class="tab-btn" data-tab="quizzes">Quizzes</button>
+                        <button class="tab-btn" data-tab="overview">Overview</button>
+                    </div>
+
+                    <!-- Resources Tab -->
+                    <div class="tab-content active" id="resourcesTab">
+                        <div class="resources-header">
+                            <h3>Learning Resources</h3>
+                            <div class="resources-filter">
+                                <select id="resourceTypeFilter">
+                                    <option value="">All Types</option>
+                                    <option value="PDF">PDF</option>
+                                    <option value="TEXT">Text</option>
+                                    <option value="LINK">Links</option>
+                                    <option value="VIDEO">Video</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="resources-list" id="resourcesList">
+                            <div class="loading-spinner">Loading resources...</div>
+                        </div>
+                    </div>
+
+                    <!-- Quizzes Tab -->
+                    <div class="tab-content" id="quizzesTab">
+                        <div class="quizzes-header">
+                            <h3>Course Quizzes</h3>
+                            <div class="quizzes-filter">
+                                <select id="quizStatusFilter">
+                                    <option value="">All Status</option>
+                                    <option value="Not Started">Not Started</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="quizzes-list" id="quizzesList">
+                            <div class="loading-spinner">Loading quizzes...</div>
+                        </div>
+                    </div>
+
+                    <!-- Overview Tab -->
+                    <div class="tab-content" id="overviewTab">
+                        <div class="overview-content">
+                            <h3>Course Overview</h3>
+                            <div class="overview-grid">
+                                <div class="overview-card">
+                                    <h4>Learning Objectives</h4>
+                                    <div id="learningObjectives">
+                                        <p class="text-muted">No learning objectives specified</p>
+                                    </div>
+                                </div>
+                                <div class="overview-card">
+                                    <h4>Prerequisites</h4>
+                                    <div id="prerequisites">
+                                        <p class="text-muted">No prerequisites specified</p>
+                                    </div>
+                                </div>
+                                <div class="overview-card">
+                                    <h4>Course Structure</h4>
+                                    <div id="courseStructure">
+                                        <p class="text-muted">Course structure information loading...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Add Resource Modal -->
+    <div class="modal" id="addResourceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Resource</h3>
+                <button class="modal-close" id="closeResourceModal">&times;</button>
+            </div>
+            <form id="addResourceForm">
+                <div class="form-group">
+                    <label for="resourceTitle">Resource Title</label>
+                    <input type="text" id="resourceTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="resourceType">Resource Type</label>
+                    <select id="resourceType" name="type" required>
+                        <option value="">Select Type</option>
+                        <option value="PDF">PDF Document</option>
+                        <option value="TEXT">Text Content</option>
+                        <option value="LINK">External Link</option>
+                        <option value="VIDEO">Video</option>
+                    </select>
+                </div>
+                <div class="form-group" id="fileUploadGroup" style="display: none;">
+                    <label for="resourceFile">File</label>
+                    <input type="file" id="resourceFile" name="file" accept=".pdf,.txt,.doc,.docx,.mp4,.avi,.mov">
+                </div>
+                <div class="form-group" id="textContentGroup" style="display: none;">
+                    <label for="resourceText">Text Content</label>
+                    <textarea id="resourceText" name="text_content" rows="6"></textarea>
+                </div>
+                <div class="form-group" id="linkGroup" style="display: none;">
+                    <label for="resourceLink">URL</label>
+                    <input type="url" id="resourceLink" name="file_path_or_url" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label for="resourceDescription">Description</label>
+                    <textarea id="resourceDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelResource">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Resource</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Course Modal -->
+    <div class="modal" id="editCourseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Course</h3>
+                <button class="modal-close" id="closeEditModal">&times;</button>
+            </div>
+            <form id="editCourseForm">
+                <div class="form-group">
+                    <label for="editCourseTitle">Course Title</label>
+                    <input type="text" id="editCourseTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCourseDescription">Description</label>
+                    <textarea id="editCourseDescription" name="description" rows="4" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelEdit">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ARU Academy</h3>
+                    <p>Empowering education through technology and innovation.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@aru.academy</p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ARU Academy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/courses.js"></script>
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user')) {
+            window.location.href = 'login.html';
+        }
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userRole = user.role;
+
+        // Update UI based on user role
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userRole').textContent = userRole;
+
+        // Show instructor actions if applicable
+        if (userRole === 'Instructor' || userRole === 'Admin') {
+            document.getElementById('instructorActions').style.display = 'flex';
+        } else {
+            document.getElementById('studentProgress').style.display = 'block';
+        }
+
+        // Show admin link if applicable
+        if (userRole === 'Admin') {
+            document.getElementById('adminLink').style.display = 'block';
+        }
+
+        // Get course ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('id');
+
+        if (!courseId) {
+            window.location.href = 'courses.html';
+        }
+
+        // Initialize course detail page
+        initializeCourseDetailPage(courseId);
+
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Show corresponding content
+                const tabName = this.dataset.tab;
+                document.getElementById(tabName + 'Tab').classList.add('active');
+            });
+        });
+
+        // Resource type change handler
+        document.getElementById('resourceType').addEventListener('change', function() {
+            const type = this.value;
+            document.getElementById('fileUploadGroup').style.display = 'none';
+            document.getElementById('textContentGroup').style.display = 'none';
+            document.getElementById('linkGroup').style.display = 'none';
+            
+            if (type === 'PDF' || type === 'VIDEO') {
+                document.getElementById('fileUploadGroup').style.display = 'block';
+            } else if (type === 'TEXT') {
+                document.getElementById('textContentGroup').style.display = 'block';
+            } else if (type === 'LINK') {
+                document.getElementById('linkGroup').style.display = 'block';
+            }
+        });
+
+        // Add resource functionality
+        document.getElementById('addResourceBtn').addEventListener('click', function() {
+            document.getElementById('addResourceModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        });
+
+        // Edit course functionality
+        document.getElementById('editCourseBtn').addEventListener('click', function() {
+            document.getElementById('editCourseModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+            populateEditForm();
+        });
+
+        // Create quiz functionality
+        document.getElementById('createQuizBtn').addEventListener('click', function() {
+            window.location.href = `quizzes.html?action=create&course_id=${courseId}`;
+        });
+
+        // Modal close functionality
+        document.getElementById('closeResourceModal').addEventListener('click', function() {
+            document.getElementById('addResourceModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+
+        document.getElementById('closeEditModal').addEventListener('click', function() {
+            document.getElementById('editCourseModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+
+        document.getElementById('cancelResource').addEventListener('click', function() {
+            document.getElementById('addResourceModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+
+        document.getElementById('cancelEdit').addEventListener('click', function() {
+            document.getElementById('editCourseModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+
+        // Form submissions
+        document.getElementById('addResourceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const resourceData = new FormData();
+            
+            // Add basic resource data
+            resourceData.append('title', formData.get('title'));
+            resourceData.append('description', formData.get('description'));
+            resourceData.append('course_id', courseId);
+            resourceData.append('type', formData.get('type'));
+
+            // Handle different resource types
+            const resourceType = formData.get('type');
+            
+            if (resourceType === 'PDF' || resourceType === 'VIDEO') {
+                const file = formData.get('file');
+                if (file) {
+                    resourceData.append('file', file);
+                }
+            } else if (resourceType === 'TEXT') {
+                resourceData.append('text_content', formData.get('text_content'));
+            } else if (resourceType === 'LINK') {
+                resourceData.append('file_path_or_url', formData.get('file_path_or_url'));
+            }
+
+            try {
+                showLoading();
+                
+                const response = await api.post('/api/resources/', resourceData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                if (response.success) {
+                    showAlert('Resource added successfully!', 'success');
+                    document.getElementById('addResourceModal').style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                    this.reset();
+                    loadCourseResources();
+                    updateResourceCount();
+                } else {
+                    showAlert(response.message || 'Failed to add resource', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding resource:', error);
+                showAlert('An error occurred while adding the resource', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        document.getElementById('editCourseForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const courseData = {
+                title: formData.get('title'),
+                description: formData.get('description')
+            };
+
+            try {
+                showLoading();
+                
+                const response = await api.put(`/api/courses/${courseId}`, courseData);
+
+                if (response.success) {
+                    showAlert('Course updated successfully!', 'success');
+                    document.getElementById('editCourseModal').style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                    loadCourseDetails();
+                } else {
+                    showAlert(response.message || 'Failed to update course', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating course:', error);
+                showAlert('An error occurred while updating the course', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Helper functions
+        async function initializeCourseDetailPage(courseId) {
+            await loadCourseDetails();
+            await loadCourseResources();
+            await loadCourseQuizzes();
+            if (userRole === 'Student') {
+                await loadStudentProgress();
+            }
+        }
+
+        async function loadCourseDetails() {
+            try {
+                const response = await api.get(`/api/courses/${courseId}`);
+                
+                if (response.success) {
+                    const course = response.data;
+                    
+                    // Update course header
+                    document.getElementById('courseTitle').textContent = course.title;
+                    document.getElementById('courseTitleMain').textContent = course.title;
+                    document.getElementById('courseDescription').textContent = course.description || 'No description available';
+                    document.getElementById('courseDepartment').textContent = course.department_name || 'N/A';
+                    document.getElementById('courseInstructor').textContent = course.instructor_name || 'N/A';
+                    document.getElementById('courseResources').textContent = course.resource_count || 0;
+                    
+                    // Update page title
+                    document.title = `${course.title} - ARU Academy`;
+                } else {
+                    showAlert('Failed to load course details', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading course details:', error);
+                showAlert('An error occurred while loading course details', 'error');
+            }
+        }
+
+        async function loadCourseResources() {
+            try {
+                const response = await api.get(`/api/resources/course/${courseId}`);
+                
+                if (response.success) {
+                    displayResources(response.data);
+                } else {
+                    document.getElementById('resourcesList').innerHTML = '<p class="text-muted">Error loading resources</p>';
+                }
+            } catch (error) {
+                console.error('Error loading course resources:', error);
+                document.getElementById('resourcesList').innerHTML = '<p class="text-muted">Error loading resources</p>';
+            }
+        }
+
+        function displayResources(resources) {
+            const resourcesList = document.getElementById('resourcesList');
+            
+            if (!resources || resources.length === 0) {
+                resourcesList.innerHTML = '<p class="text-muted">No resources available for this course</p>';
+                return;
+            }
+
+            const resourcesHTML = resources.map(resource => `
+                <div class="resource-item">
+                    <div class="resource-icon">
+                        ${getResourceIcon(resource.type)}
+                    </div>
+                    <div class="resource-content">
+                        <h4>${resource.title}</h4>
+                        <p>${resource.description || 'No description available'}</p>
+                        <div class="resource-meta">
+                            <span class="resource-type">${resource.type}</span>
+                            <span class="resource-date">${new Date(resource.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="resource-actions">
+                        ${getResourceActions(resource)}
+                    </div>
+                </div>
+            `).join('');
+
+            resourcesList.innerHTML = resourcesHTML;
+        }
+
+        function getResourceIcon(type) {
+            switch (type) {
+                case 'PDF': return '📄';
+                case 'TEXT': return '📝';
+                case 'LINK': return '🔗';
+                case 'VIDEO': return '🎥';
+                default: return '📁';
+            }
+        }
+
+        function getResourceActions(resource) {
+            if (userRole === 'Student') {
+                if (resource.type === 'LINK') {
+                    return `<a href="${resource.file_path_or_url}" target="_blank" class="btn btn-primary btn-sm">Open Link</a>`;
+                } else if (resource.type === 'TEXT') {
+                    return `<button class="btn btn-primary btn-sm" onclick="viewTextResource('${resource.id}')">View Text</button>`;
+                } else {
+                    return `<button class="btn btn-primary btn-sm" onclick="downloadResource('${resource.id}')">Download</button>`;
+                }
+            } else {
+                return `
+                    <button class="btn btn-outline btn-sm" onclick="editResource('${resource.id}')">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteResource('${resource.id}')">Delete</button>
+                `;
+            }
+        }
+
+        async function loadCourseQuizzes() {
+            try {
+                const response = await api.get(`/api/quizzes/course/${courseId}`);
+                
+                if (response.success) {
+                    displayQuizzes(response.data);
+                } else {
+                    document.getElementById('quizzesList').innerHTML = '<p class="text-muted">Error loading quizzes</p>';
+                }
+            } catch (error) {
+                console.error('Error loading course quizzes:', error);
+                document.getElementById('quizzesList').innerHTML = '<p class="text-muted">Error loading quizzes</p>';
+            }
+        }
+
+        function displayQuizzes(quizzes) {
+            const quizzesList = document.getElementById('quizzesList');
+            
+            if (!quizzes || quizzes.length === 0) {
+                quizzesList.innerHTML = '<p class="text-muted">No quizzes available for this course</p>';
+                return;
+            }
+
+            const quizzesHTML = quizzes.map(quiz => `
+                <div class="quiz-item">
+                    <div class="quiz-content">
+                        <h4>${quiz.title}</h4>
+                        <p>${quiz.description || 'No description available'}</p>
+                        <div class="quiz-meta">
+                            <span class="quiz-topic">${quiz.topic || 'General'}</span>
+                            <span class="quiz-difficulty">${quiz.difficulty}</span>
+                            <span class="quiz-questions">${quiz.question_count || 0} questions</span>
+                        </div>
+                    </div>
+                    <div class="quiz-actions">
+                        ${getQuizActions(quiz)}
+                    </div>
+                </div>
+            `).join('');
+
+            quizzesList.innerHTML = quizzesHTML;
+        }
+
+        function getQuizActions(quiz) {
+            if (userRole === 'Student') {
+                if (quiz.status === 'Not Started') {
+                    return `<button class="btn btn-primary btn-sm" onclick="startQuiz('${quiz.id}')">Start Quiz</button>`;
+                } else if (quiz.status === 'In Progress') {
+                    return `<button class="btn btn-warning btn-sm" onclick="continueQuiz('${quiz.id}')">Continue Quiz</button>`;
+                } else {
+                    return `<button class="btn btn-outline btn-sm" onclick="viewQuizResults('${quiz.id}')">View Results</button>`;
+                }
+            } else {
+                return `
+                    <button class="btn btn-outline btn-sm" onclick="editQuiz('${quiz.id}')">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteQuiz('${quiz.id}')">Delete</button>
+                `;
+            }
+        }
+
+        async function loadStudentProgress() {
+            try {
+                const response = await api.get(`/api/resources/progress/course/${courseId}`);
+                
+                if (response.success) {
+                    updateProgressDisplay(response.data);
+                }
+            } catch (error) {
+                console.error('Error loading student progress:', error);
+            }
+        }
+
+        function updateProgressDisplay(progressData) {
+            if (!progressData || progressData.length === 0) {
+                return;
+            }
+
+            const totalResources = progressData.length;
+            const completedResources = progressData.filter(p => p.status === 'Completed').length;
+            const progressPercentage = Math.round((completedResources / totalResources) * 100);
+
+            document.getElementById('progressFill').style.width = progressPercentage + '%';
+            document.getElementById('progressText').textContent = progressPercentage + '% Complete';
+            document.getElementById('progressDetails').textContent = `${completedResources} of ${totalResources} resources completed`;
+        }
+
+        function populateEditForm() {
+            const courseTitle = document.getElementById('courseTitleMain').textContent;
+            const courseDescription = document.getElementById('courseDescription').textContent;
+            
+            document.getElementById('editCourseTitle').value = courseTitle;
+            document.getElementById('editCourseDescription').value = courseDescription;
+        }
+
+        function updateResourceCount() {
+            const resourcesList = document.getElementById('resourcesList');
+            const resourceItems = resourcesList.querySelectorAll('.resource-item');
+            document.getElementById('courseResources').textContent = resourceItems.length;
+        }
+
+        // Resource actions for students
+        function viewTextResource(resourceId) {
+            // This would show a modal with the text content
+            showAlert('Text resource viewer coming soon!', 'info');
+        }
+
+        async function downloadResource(resourceId) {
+            try {
+                const response = await api.downloadFile(`/api/resources/${resourceId}/download`);
+                if (response.success) {
+                    showAlert('Resource downloaded successfully!', 'success');
+                } else {
+                    showAlert('Failed to download resource', 'error');
+                }
+            } catch (error) {
+                console.error('Error downloading resource:', error);
+                showAlert('An error occurred while downloading the resource', 'error');
+            }
+        }
+
+        // Quiz actions for students
+        function startQuiz(quizId) {
+            window.location.href = `quizzes.html?quiz_id=${quizId}`;
+        }
+
+        function continueQuiz(quizId) {
+            window.location.href = `quizzes.html?quiz_id=${quizId}&continue=true`;
+        }
+
+        function viewQuizResults(quizId) {
+            window.location.href = `quizzes.html?quiz_id=${quizId}&view_results=true`;
+        }
+
+        // Resource management for instructors/admins
+        function editResource(resourceId) {
+            showAlert('Resource editing feature coming soon!', 'info');
+        }
+
+        async function deleteResource(resourceId) {
+            if (!confirm('Are you sure you want to delete this resource? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await api.delete(`/api/resources/${resourceId}`);
+                
+                if (response.success) {
+                    showAlert('Resource deleted successfully!', 'success');
+                    loadCourseResources();
+                    updateResourceCount();
+                } else {
+                    showAlert(response.message || 'Failed to delete resource', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting resource:', error);
+                showAlert('An error occurred while deleting the resource', 'error');
+            }
+        }
+
+        // Quiz management for instructors/admins
+        function editQuiz(quizId) {
+            window.location.href = `quizzes.html?quiz_id=${quizId}&edit=true`;
+        }
+
+        async function deleteQuiz(quizId) {
+            if (!confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await api.delete(`/api/quizzes/${quizId}`);
+                
+                if (response.success) {
+                    showAlert('Quiz deleted successfully!', 'success');
+                    loadCourseQuizzes();
+                } else {
+                    showAlert(response.message || 'Failed to delete quiz', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting quiz:', error);
+                showAlert('An error occurred while deleting the quiz', 'error');
+            }
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            try {
+                await api.post('/api/auth/logout');
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // User menu toggle
+        document.getElementById('userMenuToggle').addEventListener('click', function() {
+            document.getElementById('userMenu').classList.toggle('show');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.getElementById('userMenu').classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

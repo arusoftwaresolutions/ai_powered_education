@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - ARU Academy</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html">
+                        <h1>ARU Academy</h1>
+                    </a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="index.html#features">Features</a></li>
+                        <li><a href="index.html#departments">Departments</a></li>
+                        <li><a href="about.html">About</a></li>
+                    </ul>
+                </nav>
+                <div class="nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="auth-section">
+            <div class="container">
+                <div class="auth-container">
+                    <div class="auth-header">
+                        <h2>Create Your Account</h2>
+                        <p>Enter your information to create your account. Your role and department will be assigned based on your records.</p>
+                    </div>
+
+                    <form class="auth-form" id="registerForm">
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" required>
+                            <small>Must be at least 8 characters long</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="department">Department</label>
+                            <select id="department" name="department" required>
+                                <option value="">Select Department</option>
+                                <option value="1">Computer Science</option>
+                                <option value="2">Electrical Engineering</option>
+                                <option value="3">Mechanical Engineering</option>
+                                <option value="4">Business</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="role">Role Request</label>
+                            <select id="role" name="role" required>
+                                <option value="">Select Role</option>
+                                <option value="Student">Student</option>
+                                <option value="Instructor">Instructor</option>
+                            </select>
+                            <small>Instructor requests require admin approval</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="terms" name="terms" required>
+                                <span class="checkmark"></span>
+                                I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-full">
+                            Create Account
+                        </button>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p>Already have an account? <a href="login.html" class="link">Sign In</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ARU Academy</h3>
+                    <p>Empowering education through technology and innovation.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="index.html#features">Features</a></li>
+                        <li><a href="index.html#departments">Departments</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@aru.academy</p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ARU Academy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const departmentNames = {
+                '1': 'Computer Science',
+                '2': 'Electrical Engineering', 
+                '3': 'Mechanical Engineering',
+                '4': 'Business Administration'
+            };
+            
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                department: departmentNames[formData.get('department')],
+                role: formData.get('role')
+            };
+
+            // Validate password confirmation
+            if (data.password !== formData.get('confirmPassword')) {
+                showAlert('Passwords do not match', 'error');
+                return;
+            }
+
+            // Validate password length
+            if (data.password.length < 8) {
+                showAlert('Password must be at least 8 characters long', 'error');
+                return;
+            }
+
+            // Validate terms acceptance
+            if (!formData.get('terms')) {
+                showAlert('Please accept the terms and conditions', 'error');
+                return;
+            }
+
+            try {
+                showLoading();
+                
+                const backendUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8000' 
+                    : 'https://aru-academy-backend.onrender.com';
+                
+                const response = await fetch(`${backendUrl}/api/auth/self-register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                console.log('Registration response:', response.status, result);
+
+                if (response.ok && result.success) {
+                    // Auto-login the user
+                    if (result.user) {
+                        // Store user data in localStorage
+                        localStorage.setItem('user', JSON.stringify(result.user));
+                        
+                        // Generate a simple token (in a real app, this would come from the server)
+                        const token = 'temp_token_' + Date.now();
+                        localStorage.setItem('token', token);
+                        
+                        showAlert('Account created successfully! Welcome to ARU Academy!', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 2000);
+                    } else {
+                        showAlert('Account created successfully! You can now log in.', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 2000);
+                    }
+                } else {
+                    console.error('Registration failed:', result);
+                    
+                    // Check if it's a permission issue
+                    if (result.error && result.error.includes('not found in our records')) {
+                        showAlert('You need permission from ARU Academy to register. Please contact the administration to get your account approved.', 'error');
+                    } else if (result.error && result.error.includes('Name does not match')) {
+                        showAlert('Name does not match our records. Please check your name and try again.', 'error');
+                    } else {
+                        showAlert(result.error || result.message || 'Registration failed', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showAlert('An error occurred during registration', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Check if user is already logged in
+        if (localStorage.getItem('user')) {
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizzes - ARU Academy</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="dashboard.html">
+                        <h1>ARU Academy</h1>
+                    </a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html" class="active">Quizzes</a></li>
+                        <li><a href="ai-tutor.html">AI Tutor</a></li>
+                        <li id="adminLink" style="display: none;"><a href="admin.html">Admin</a></li>
+                    </ul>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span id="userName">Loading...</span>
+                        <span class="user-role" id="userRole">Loading...</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="dropdown-toggle" id="userMenuToggle">
+                            <span class="avatar">👤</span>
+                        </button>
+                        <div class="dropdown-menu" id="userMenu">
+                            <a href="profile.html">Profile</a>
+                            <a href="#" id="logoutBtn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="quizzes-section">
+            <div class="container">
+                <div class="quizzes-header">
+                    <div class="header-content">
+                        <h1>Quizzes</h1>
+                        <p>Test your knowledge and track your progress</p>
+                    </div>
+                    <div class="header-actions" id="instructorActions" style="display: none;">
+                        <button class="btn btn-primary" id="createQuizBtn">Create Quiz</button>
+                        <button class="btn btn-outline" id="importQuizBtn">Import Quiz</button>
+                    </div>
+                </div>
+
+                <!-- Quiz Navigation -->
+                <div class="quiz-nav">
+                    <button class="nav-btn active" data-tab="available">Available Quizzes</button>
+                    <button class="nav-btn" data-tab="history">Quiz History</button>
+                    <button class="nav-btn" data-tab="results">Results & Analytics</button>
+                </div>
+
+                <!-- Available Quizzes Tab -->
+                <div class="tab-content active" id="availableTab">
+                    <div class="filters-section">
+                        <div class="search-box">
+                            <input type="text" id="quizSearchInput" placeholder="Search quizzes...">
+                            <button class="search-btn">🔍</button>
+                        </div>
+                        <div class="filter-options">
+                            <select id="quizCourseFilter">
+                                <option value="">All Courses</option>
+                            </select>
+                            <select id="quizDifficultyFilter">
+                                <option value="">All Difficulties</option>
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                            <select id="quizStatusFilter">
+                                <option value="">All Status</option>
+                                <option value="Not Started">Not Started</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="quizzes-grid" id="quizzesGrid">
+                        <div class="loading-spinner">Loading quizzes...</div>
+                    </div>
+
+                    <div class="pagination" id="quizzesPagination" style="display: none;">
+                        <button class="btn btn-outline" id="quizzesPrevPage">Previous</button>
+                        <span class="page-info" id="quizzesPageInfo">Page 1 of 1</span>
+                        <button class="btn btn-outline" id="quizzesNextPage">Next</button>
+                    </div>
+                </div>
+
+                <!-- Quiz History Tab -->
+                <div class="tab-content" id="historyTab">
+                    <div class="history-container">
+                        <div class="history-header">
+                            <h3>Your Quiz History</h3>
+                            <div class="history-filters">
+                                <select id="historyCourseFilter">
+                                    <option value="">All Courses</option>
+                                </select>
+                                <select id="historyResultFilter">
+                                    <option value="">All Results</option>
+                                    <option value="passed">Passed</option>
+                                    <option value="failed">Failed</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="history-list" id="historyList">
+                            <div class="loading-spinner">Loading history...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results & Analytics Tab -->
+                <div class="tab-content" id="resultsTab">
+                    <div class="analytics-container">
+                        <div class="analytics-header">
+                            <h3>Quiz Performance Analytics</h3>
+                            <div class="analytics-period">
+                                <select id="analyticsPeriod">
+                                    <option value="7">Last 7 days</option>
+                                    <option value="30" selected>Last 30 days</option>
+                                    <option value="90">Last 90 days</option>
+                                    <option value="365">Last year</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="analytics-grid">
+                            <div class="analytics-card">
+                                <h4>Overall Performance</h4>
+                                <div class="performance-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="totalQuizzes">0</span>
+                                        <span class="stat-label">Quizzes Taken</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="averageScore">0%</span>
+                                        <span class="stat-label">Average Score</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="passRate">0%</span>
+                                        <span class="stat-label">Pass Rate</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="analytics-card">
+                                <h4>Performance by Course</h4>
+                                <div class="course-performance" id="coursePerformance">
+                                    <p class="text-muted">No course data available</p>
+                                </div>
+                            </div>
+
+                            <div class="analytics-card">
+                                <h4>Recent Performance Trend</h4>
+                                <div class="performance-trend" id="performanceTrend">
+                                    <p class="text-muted">Performance trend chart loading...</p>
+                                </div>
+                            </div>
+
+                            <div class="analytics-card">
+                                <h4>Strengths & Weaknesses</h4>
+                                <div class="strengths-weaknesses" id="strengthsWeaknesses">
+                                    <p class="text-muted">Analysis loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create Quiz Modal -->
+    <div class="modal" id="createQuizModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Quiz</h3>
+                <button class="modal-close" id="closeCreateModal">&times;</button>
+            </div>
+            <form id="createQuizForm">
+                <div class="form-group">
+                    <label for="quizTitle">Quiz Title</label>
+                    <input type="text" id="quizTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="quizDescription">Description</label>
+                    <textarea id="quizDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="quizCourse">Course</label>
+                    <select id="quizCourse" name="course_id" required>
+                        <option value="">Select Course</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quizTopic">Topic</label>
+                    <input type="text" id="quizTopic" name="topic" placeholder="e.g., Chapter 1, Midterm Review">
+                </div>
+                <div class="form-group">
+                    <label for="quizDifficulty">Difficulty Level</label>
+                    <select id="quizDifficulty" name="difficulty" required>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate" selected>Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quizTimeLimit">Time Limit (minutes)</label>
+                    <input type="number" id="quizTimeLimit" name="time_limit" min="5" max="180" value="30">
+                    <small>Leave empty for no time limit</small>
+                </div>
+                <div class="form-group">
+                    <label for="passingScore">Passing Score (%)</label>
+                    <input type="number" id="passingScore" name="passing_score" min="0" max="100" value="70">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelCreate">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Quiz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quiz Taking Modal -->
+    <div class="modal" id="quizModal">
+        <div class="modal-content quiz-modal">
+            <div class="modal-header">
+                <h3 id="quizModalTitle">Quiz Title</h3>
+                <div class="quiz-timer" id="quizTimer" style="display: none;">
+                    <span>Time Remaining: </span>
+                    <span id="timeRemaining">--:--</span>
+                </div>
+                <button class="modal-close" id="closeQuizModal">&times;</button>
+            </div>
+            <div class="quiz-content" id="quizContent">
+                <!-- Quiz questions will be loaded here -->
+            </div>
+            <div class="quiz-actions">
+                <button class="btn btn-outline" id="previousQuestion" style="display: none;">Previous</button>
+                <div class="question-counter">
+                    <span id="questionCounter">Question 1 of 1</span>
+                </div>
+                <button class="btn btn-primary" id="nextQuestion">Next</button>
+                <button class="btn btn-success" id="submitQuiz" style="display: none;">Submit Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Results Modal -->
+    <div class="modal" id="resultsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Quiz Results</h3>
+                <button class="modal-close" id="closeResultsModal">&times;</button>
+            </div>
+            <div class="results-content" id="resultsContent">
+                <!-- Quiz results will be displayed here -->
+            </div>
+            <div class="results-actions">
+                <button class="btn btn-outline" id="reviewAnswers">Review Answers</button>
+                <button class="btn btn-primary" id="closeResults">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ARU Academy</h3>
+                    <p>Empowering education through technology and innovation.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@aru.academy</p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ARU Academy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user')) {
+            window.location.href = 'login.html';
+        }
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userRole = user.role;
+
+        // Update UI based on user role
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userRole').textContent = userRole;
+
+        // Show instructor actions if applicable
+        if (userRole === 'Instructor' || userRole === 'Admin') {
+            document.getElementById('instructorActions').style.display = 'flex';
+        }
+
+        // Show admin link if applicable
+        if (userRole === 'Admin') {
+            document.getElementById('adminLink').style.display = 'block';
+        }
+
+        // Quiz state variables
+        let currentQuiz = null;
+        let currentQuestionIndex = 0;
+        let quizAnswers = {};
+        let quizTimer = null;
+        let timeRemaining = 0;
+
+        // Tab functionality
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Show corresponding content
+                const tabName = this.dataset.tab;
+                document.getElementById(tabName + 'Tab').classList.add('active');
+                
+                // Load tab-specific data
+                if (tabName === 'available') {
+                    loadAvailableQuizzes();
+                } else if (tabName === 'history') {
+                    loadQuizHistory();
+                } else if (tabName === 'results') {
+                    loadQuizAnalytics();
+                }
+            });
+        });
+
+        // Load initial data
+        loadAvailableQuizzes();
+        loadUserCourses();
+
+        // Search and filter functionality
+        document.getElementById('quizSearchInput').addEventListener('input', debounce(function() {
+            loadAvailableQuizzes();
+        }, 300));
+
+        document.getElementById('quizCourseFilter').addEventListener('change', function() {
+            loadAvailableQuizzes();
+        });
+
+        document.getElementById('quizDifficultyFilter').addEventListener('change', function() {
+            loadAvailableQuizzes();
+        });
+
+        document.getElementById('quizStatusFilter').addEventListener('change', function() {
+            loadAvailableQuizzes();
+        });
+
+        // Create quiz functionality
+        document.getElementById('createQuizBtn').addEventListener('click', function() {
+            document.getElementById('createQuizModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        });
+
+        // Create quiz form submission
+        document.getElementById('createQuizForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const quizData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                course_id: parseInt(formData.get('course_id')),
+                topic: formData.get('topic'),
+                difficulty: formData.get('difficulty'),
+                time_limit: formData.get('time_limit') ? parseInt(formData.get('time_limit')) : null,
+                passing_score: parseInt(formData.get('passing_score'))
+            };
+
+            try {
+                showLoading();
+                
+                const response = await api.post('/api/quizzes/', quizData);
+
+                if (response.success) {
+                    showAlert('Quiz created successfully!', 'success');
+                    document.getElementById('createQuizModal').style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                    this.reset();
+                    loadAvailableQuizzes();
+                } else {
+                    showAlert(response.message || 'Failed to create quiz', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating quiz:', error);
+                showAlert('An error occurred while creating the quiz', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Modal close functionality
+        document.getElementById('closeCreateModal').addEventListener('click', function() {
+            document.getElementById('createQuizModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+
+        document.getElementById('cancelCreate').addEventListener('click', function() {
+            document.getElementById('createQuizModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+
+        // Quiz taking functionality
+        function startQuiz(quiz) {
+            currentQuiz = quiz;
+            currentQuestionIndex = 0;
+            quizAnswers = {};
+            
+            // Set up timer if applicable
+            if (quiz.time_limit) {
+                timeRemaining = quiz.time_limit * 60; // Convert to seconds
+                startQuizTimer();
+            }
+            
+            // Load first question
+            loadQuizQuestion();
+            
+            // Show quiz modal
+            document.getElementById('quizModalTitle').textContent = quiz.title;
+            document.getElementById('quizModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+
+        function loadQuizQuestion() {
+            if (!currentQuiz || currentQuestionIndex >= currentQuiz.questions.length) {
+                return;
+            }
+
+            const question = currentQuiz.questions[currentQuestionIndex];
+            const quizContent = document.getElementById('quizContent');
+            
+            let questionHTML = `
+                <div class="question-container">
+                    <div class="question-header">
+                        <h4>Question ${currentQuestionIndex + 1} of ${currentQuiz.questions.length}</h4>
+                        <span class="question-type">${question.question_type}</span>
+                    </div>
+                    <div class="question-content">
+                        <p>${question.question}</p>
+                    </div>
+            `;
+
+            if (question.question_type === 'Multiple Choice') {
+                questionHTML += '<div class="question-options">';
+                question.options.forEach((option, index) => {
+                    const isChecked = quizAnswers[currentQuestionIndex] === index ? 'checked' : '';
+                    questionHTML += `
+                        <label class="option-label">
+                            <input type="radio" name="q${currentQuestionIndex}" value="${index}" ${isChecked}>
+                            <span class="option-text">${option}</span>
+                        </label>
+                    `;
+                });
+                questionHTML += '</div>';
+            } else {
+                const answer = quizAnswers[currentQuestionIndex] || '';
+                questionHTML += `
+                    <div class="question-answer">
+                        <textarea name="q${currentQuestionIndex}" placeholder="Type your answer here..." rows="4">${answer}</textarea>
+                    </div>
+                `;
+            }
+
+            questionHTML += '</div>';
+            quizContent.innerHTML = questionHTML;
+
+            // Update navigation buttons
+            updateQuizNavigation();
+            
+            // Add event listeners for answer changes
+            addAnswerEventListeners();
+        }
+
+        function addAnswerEventListeners() {
+            // For multiple choice questions
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    quizAnswers[currentQuestionIndex] = parseInt(this.value);
+                });
+            });
+
+            // For text answers
+            document.querySelectorAll('textarea').forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    quizAnswers[currentQuestionIndex] = this.value;
+                });
+            });
+        }
+
+        function updateQuizNavigation() {
+            const previousBtn = document.getElementById('previousQuestion');
+            const nextBtn = document.getElementById('nextQuestion');
+            const submitBtn = document.getElementById('submitQuiz');
+            const questionCounter = document.getElementById('questionCounter');
+
+            // Update question counter
+            questionCounter.textContent = `Question ${currentQuestionIndex + 1} of ${currentQuiz.questions.length}`;
+
+            // Show/hide previous button
+            if (currentQuestionIndex === 0) {
+                previousBtn.style.display = 'none';
+            } else {
+                previousBtn.style.display = 'inline-block';
+            }
+
+            // Show/hide next/submit buttons
+            if (currentQuestionIndex === currentQuiz.questions.length - 1) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-block';
+            } else {
+                nextBtn.style.display = 'inline-block';
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        // Quiz navigation
+        document.getElementById('previousQuestion').addEventListener('click', function() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuizQuestion();
+            }
+        });
+
+        document.getElementById('nextQuestion').addEventListener('click', function() {
+            if (currentQuestionIndex < currentQuiz.questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuizQuestion();
+            }
+        });
+
+        // Submit quiz
+        document.getElementById('submitQuiz').addEventListener('click', async function() {
+            if (confirm('Are you sure you want to submit this quiz? You cannot change your answers after submission.')) {
+                await submitQuiz();
+            }
+        });
+
+        async function submitQuiz() {
+            try {
+                showLoading();
+                
+                const submissionData = {
+                    quiz_id: currentQuiz.id,
+                    answers: quizAnswers
+                };
+
+                const response = await api.post(`/api/quizzes/${currentQuiz.id}/submit`, submissionData);
+
+                if (response.success) {
+                    // Stop timer
+                    if (quizTimer) {
+                        clearInterval(quizTimer);
+                        quizTimer = null;
+                    }
+
+                    // Show results
+                    showQuizResults(response.data);
+                    
+                    // Close quiz modal
+                    document.getElementById('quizModal').style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                    
+                    // Refresh quizzes list
+                    loadAvailableQuizzes();
+                } else {
+                    showAlert(response.message || 'Failed to submit quiz', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting quiz:', error);
+                showAlert('An error occurred while submitting the quiz', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showQuizResults(results) {
+            const resultsContent = document.getElementById('resultsContent');
+            
+            const resultsHTML = `
+                <div class="results-summary">
+                    <div class="result-score">
+                        <h4>Your Score</h4>
+                        <div class="score-display">
+                            <span class="score-number">${results.score}</span>
+                            <span class="score-max">/ ${results.max_score}</span>
+                        </div>
+                        <div class="score-percentage">${Math.round((results.score / results.max_score) * 100)}%</div>
+                    </div>
+                    <div class="result-status">
+                        <span class="status-badge ${results.score >= results.passing_score ? 'passed' : 'failed'}">
+                            ${results.score >= results.passing_score ? 'PASSED' : 'FAILED'}
+                        </span>
+                    </div>
+                </div>
+                <div class="results-breakdown">
+                    <h5>Question Breakdown</h5>
+                    <div class="breakdown-list">
+                        ${results.question_results.map((qResult, index) => `
+                            <div class="breakdown-item ${qResult.correct ? 'correct' : 'incorrect'}">
+                                <span class="question-number">Q${index + 1}</span>
+                                <span class="question-result">${qResult.correct ? '✓' : '✗'}</span>
+                                <span class="question-points">${qResult.points} pts</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            resultsContent.innerHTML = resultsHTML;
+            document.getElementById('resultsModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+
+        // Quiz timer functionality
+        function startQuizTimer() {
+            quizTimer = setInterval(function() {
+                timeRemaining--;
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(quizTimer);
+                    quizTimer = null;
+                    showAlert('Time is up! Submitting quiz automatically.', 'warning');
+                    submitQuiz();
+                    return;
+                }
+                
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                document.getElementById('timeRemaining').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // Close quiz modal
+        document.getElementById('closeQuizModal').addEventListener('click', function() {
+            if (confirm('Are you sure you want to exit the quiz? Your progress will be lost.')) {
+                if (quizTimer) {
+                    clearInterval(quizTimer);
+                    quizTimer = null;
+                }
+                document.getElementById('quizModal').style.display = 'none';
+                document.body.classList.remove('modal-open');
+                currentQuiz = null;
+                currentQuestionIndex = 0;
+                quizAnswers = {};
+            }
+        });
+
+        // Close results modal
+        document.getElementById('closeResultsModal').addEventListener('click', function() {
+            document.getElementById('resultsModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+
+        // Review answers functionality
+        document.getElementById('reviewAnswers').addEventListener('click', function() {
+            // This would show a detailed review of all questions and answers
+            showAlert('Answer review feature coming soon!', 'info');
+        });
+
+        // Helper functions
+        async function loadAvailableQuizzes() {
+            try {
+                const quizzesGrid = document.getElementById('quizzesGrid');
+                quizzesGrid.innerHTML = '<div class="loading-spinner">Loading quizzes...</div>';
+                
+                // Get filter values
+                const search = document.getElementById('quizSearchInput').value;
+                const courseId = document.getElementById('quizCourseFilter').value;
+                const difficulty = document.getElementById('quizDifficultyFilter').value;
+                const status = document.getElementById('quizStatusFilter').value;
+                
+                const response = await api.get('/api/quizzes/', {
+                    search,
+                    course_id: courseId || undefined,
+                    difficulty: difficulty || undefined,
+                    status: status || undefined
+                });
+
+                if (response.success && response.data.length > 0) {
+                    const quizzesHTML = response.data.map(quiz => `
+                        <div class="quiz-card">
+                            <div class="quiz-header">
+                                <h3>${quiz.title}</h3>
+                                <span class="quiz-difficulty ${quiz.difficulty}">${quiz.difficulty}</span>
+                            </div>
+                            <div class="quiz-content">
+                                <p>${quiz.description || 'No description available'}</p>
+                                <div class="quiz-meta">
+                                    <span class="meta-item">
+                                        <strong>Course:</strong> ${quiz.course_title || 'N/A'}
+                                    </span>
+                                    <span class="meta-item">
+                                        <strong>Questions:</strong> ${quiz.question_count || 0}
+                                    </span>
+                                    <span class="meta-item">
+                                        <strong>Time Limit:</strong> ${quiz.time_limit ? `${quiz.time_limit} min` : 'No limit'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="quiz-actions">
+                                ${getQuizActionButton(quiz)}
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    quizzesGrid.innerHTML = quizzesHTML;
+                } else {
+                    quizzesGrid.innerHTML = '<p class="text-muted">No quizzes found matching your criteria</p>';
+                }
+            } catch (error) {
+                console.error('Error loading quizzes:', error);
+                document.getElementById('quizzesGrid').innerHTML = '<p class="text-muted">Error loading quizzes</p>';
+            }
+        }
+
+        function getQuizActionButton(quiz) {
+            if (userRole === 'Student') {
+                if (quiz.status === 'Not Started') {
+                    return `<button class="btn btn-primary" onclick="startQuiz(${JSON.stringify(quiz).replace(/"/g, '&quot;')})">Start Quiz</button>`;
+                } else if (quiz.status === 'In Progress') {
+                    return `<button class="btn btn-warning" onclick="startQuiz(${JSON.stringify(quiz).replace(/"/g, '&quot;')})">Continue Quiz</button>`;
+                } else {
+                    return `<button class="btn btn-outline" onclick="viewQuizResults(${quiz.id})">View Results</button>`;
+                }
+            } else {
+                return `
+                    <button class="btn btn-outline" onclick="editQuiz(${quiz.id})">Edit</button>
+                    <button class="btn btn-outline" onclick="viewQuizStats(${quiz.id})">Stats</button>
+                `;
+            }
+        }
+
+        async function loadQuizHistory() {
+            try {
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '<div class="loading-spinner">Loading history...</div>';
+                
+                const courseFilter = document.getElementById('historyCourseFilter').value;
+                const resultFilter = document.getElementById('historyResultFilter').value;
+                
+                const response = await api.get('/api/quizzes/history', {
+                    course_id: courseFilter || undefined,
+                    result: resultFilter || undefined
+                });
+
+                if (response.success && response.data.length > 0) {
+                    const historyHTML = response.data.map(submission => `
+                        <div class="history-item">
+                            <div class="history-quiz">
+                                <h4>${submission.quiz_title}</h4>
+                                <p class="quiz-meta">${submission.course_title} • ${submission.quiz_topic || 'General'}</p>
+                            </div>
+                            <div class="history-result">
+                                <div class="result-score">
+                                    <span class="score">${submission.score}</span>
+                                    <span class="max-score">/ ${submission.max_score}</span>
+                                </div>
+                                <div class="result-percentage">${Math.round((submission.score / submission.max_score) * 100)}%</div>
+                                <span class="result-status ${submission.score >= submission.passing_score ? 'passed' : 'failed'}">
+                                    ${submission.score >= submission.passing_score ? 'PASSED' : 'FAILED'}
+                                </span>
+                            </div>
+                            <div class="history-meta">
+                                <span class="submission-date">${new Date(submission.submitted_at).toLocaleDateString()}</span>
+                                <button class="btn btn-sm btn-outline" onclick="viewSubmissionDetails(${submission.id})">Details</button>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    historyList.innerHTML = historyHTML;
+                } else {
+                    historyList.innerHTML = '<p class="text-muted">No quiz history found</p>';
+                }
+            } catch (error) {
+                console.error('Error loading quiz history:', error);
+                document.getElementById('historyList').innerHTML = '<p class="text-muted">Error loading history</p>';
+            }
+            loadHistoryFilters();
+        }
+
+        async function loadQuizAnalytics() {
+            try {
+                const period = document.getElementById('analyticsPeriod').value;
+                const response = await api.get('/api/quizzes/analytics', { period });
+
+                if (response.success) {
+                    const data = response.data;
+                    
+                    // Update overall performance stats
+                    document.getElementById('totalQuizzes').textContent = data.total_quizzes;
+                    document.getElementById('averageScore').textContent = Math.round(data.average_score) + '%';
+                    document.getElementById('passRate').textContent = Math.round(data.pass_rate) + '%';
+
+                    // Update course performance
+                    if (data.course_performance && data.course_performance.length > 0) {
+                        const courseHTML = data.course_performance.map(course => `
+                            <div class="course-performance-item">
+                                <span class="course-name">${course.course_title}</span>
+                                <span class="course-score">${Math.round(course.average_score)}%</span>
+                                <span class="course-count">${course.quiz_count} quizzes</span>
+                            </div>
+                        `).join('');
+                        document.getElementById('coursePerformance').innerHTML = courseHTML;
+                    }
+
+                    // Update strengths and weaknesses
+                    if (data.strengths && data.weaknesses) {
+                        const strengthsHTML = data.strengths.map(strength => 
+                            `<span class="strength-tag">${strength}</span>`
+                        ).join('');
+                        const weaknessesHTML = data.weaknesses.map(weakness => 
+                            `<span class="weakness-tag">${weakness}</span>`
+                        ).join('');
+                        
+                        document.getElementById('strengthsWeaknesses').innerHTML = `
+                            <div class="strengths">
+                                <h5>Strengths:</h5>
+                                <div class="tag-list">${strengthsHTML}</div>
+                            </div>
+                            <div class="weaknesses">
+                                <h5>Areas for Improvement:</h5>
+                                <div class="tag-list">${weaknessesHTML}</div>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading quiz analytics:', error);
+            }
+        }
+
+        async function loadUserCourses() {
+            try {
+                const response = await api.get('/api/courses/');
+                if (response.success) {
+                    populateCourseFilters(response.data);
+                }
+            } catch (error) {
+                console.error('Error loading user courses:', error);
+            }
+        }
+
+        function populateCourseFilters(courses) {
+            const courseFilters = [
+                'quizCourseFilter',
+                'historyCourseFilter'
+            ];
+            
+            courseFilters.forEach(filterId => {
+                const filter = document.getElementById(filterId);
+                if (filter) {
+                    filter.innerHTML = '<option value="">All Courses</option>';
+                    courses.forEach(course => {
+                        const option = document.createElement('option');
+                        option.value = course.id;
+                        option.textContent = course.title;
+                        filter.appendChild(option);
+                    });
+                }
+            });
+        }
+
+        function loadHistoryFilters() {
+            // Load course filter for history tab
+            loadUserCourses();
+        }
+
+        // Utility functions
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            try {
+                await api.post('/api/auth/logout');
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // User menu toggle
+        document.getElementById('userMenuToggle').addEventListener('click', function() {
+            document.getElementById('userMenu').classList.toggle('show');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.getElementById('userMenu').classList.remove('show');
+            }
+        });
+        
+        // Initialize quizzes service and load quizzes
+        const quizzesService = new QuizzesService();
+        quizzesService.loadQuizzes();
+    </script>
+</body>
+</html>
+

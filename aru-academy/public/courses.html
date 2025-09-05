@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses - ARU Academy</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="dashboard.html">
+                        <h1>ARU Academy</h1>
+                    </a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html" class="active">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                        <li><a href="ai-tutor.html">AI Tutor</a></li>
+                        <li id="adminLink" style="display: none;"><a href="admin.html">Admin</a></li>
+                    </ul>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span id="userName">Loading...</span>
+                        <span class="user-role" id="userRole">Loading...</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="dropdown-toggle" id="userMenuToggle">
+                            <span class="avatar">👤</span>
+                        </button>
+                        <div class="dropdown-menu" id="userMenu">
+                            <a href="profile.html">Profile</a>
+                            <a href="#" id="logoutBtn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="courses-section">
+            <div class="container">
+                <div class="courses-header">
+                    <div class="header-content">
+                        <h1>📚 Courses</h1>
+                        <p>Explore and manage your learning materials</p>
+                    </div>
+                    <div class="header-actions" id="instructorActions" style="display: none;">
+                        <button class="btn btn-primary" id="createCourseBtn">
+                            <span class="icon">➕</span> Create Course
+                        </button>
+                        <button class="btn btn-outline" id="uploadResourceBtn">
+                            <span class="icon">📁</span> Upload Resource
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="filters-section">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="🔍 Search courses, topics, or instructors...">
+                        <button class="search-btn">🔍</button>
+                    </div>
+                    <div class="filter-options">
+                        <select id="departmentFilter">
+                            <option value="">🏫 All Departments</option>
+                            <option value="1">💻 Computer Science</option>
+                            <option value="2">⚡ Electrical Engineering</option>
+                            <option value="3">🔧 Mechanical Engineering</option>
+                            <option value="4">💼 Business Administration</option>
+                        </select>
+                        <select id="statusFilter">
+                            <option value="">📊 All Status</option>
+                            <option value="Not Started">⏳ Not Started</option>
+                            <option value="In Progress">🚀 In Progress</option>
+                            <option value="Completed">✅ Completed</option>
+                        </select>
+                        <select id="difficultyFilter">
+                            <option value="">🎯 All Levels</option>
+                            <option value="Beginner">🟢 Beginner</option>
+                            <option value="Intermediate">🟡 Intermediate</option>
+                            <option value="Advanced">🔴 Advanced</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Courses Grid -->
+                <div class="courses-grid" id="coursesGrid">
+                    <div class="loading-spinner">Loading courses...</div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination" style="display: none;">
+                    <button class="btn btn-outline" id="prevPage">Previous</button>
+                    <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                    <button class="btn btn-outline" id="nextPage">Next</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create Course Modal -->
+    <div class="modal" id="createCourseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Course</h3>
+                <button class="modal-close" id="closeCreateModal">&times;</button>
+            </div>
+            <form id="createCourseForm">
+                <div class="form-group">
+                    <label for="courseTitle">Course Title</label>
+                    <input type="text" id="courseTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="courseDescription">Description</label>
+                    <textarea id="courseDescription" name="description" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="courseDepartment">Department</label>
+                    <select id="courseDepartment" name="department_id" required>
+                        <option value="">Select Department</option>
+                        <option value="1">Computer Science</option>
+                        <option value="2">Electrical Engineering</option>
+                        <option value="3">Mechanical Engineering</option>
+                        <option value="4">Business</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelCreate">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload Resource Modal -->
+    <div class="modal" id="uploadResourceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Upload Resource</h3>
+                <button class="modal-close" id="closeUploadModal">&times;</button>
+            </div>
+            <form id="uploadResourceForm">
+                <div class="form-group">
+                    <label for="resourceCourse">Course</label>
+                    <select id="resourceCourse" name="course_id" required>
+                        <option value="">Select Course</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="resourceTitle">Resource Title</label>
+                    <input type="text" id="resourceTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="resourceType">Resource Type</label>
+                    <select id="resourceType" name="type" required>
+                        <option value="">Select Type</option>
+                        <option value="PDF">PDF Document</option>
+                        <option value="TEXT">Text Content</option>
+                        <option value="LINK">External Link</option>
+                        <option value="VIDEO">Video</option>
+                    </select>
+                </div>
+                <div class="form-group" id="fileUploadGroup" style="display: none;">
+                    <label for="resourceFile">File</label>
+                    <input type="file" id="resourceFile" name="file" accept=".pdf,.txt,.doc,.docx,.mp4,.avi,.mov">
+                </div>
+                <div class="form-group" id="textContentGroup" style="display: none;">
+                    <label for="resourceText">Text Content</label>
+                    <textarea id="resourceText" name="text_content" rows="6"></textarea>
+                </div>
+                <div class="form-group" id="linkGroup" style="display: none;">
+                    <label for="resourceLink">URL</label>
+                    <input type="url" id="resourceLink" name="file_path_or_url" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label for="resourceDescription">Description</label>
+                    <textarea id="resourceDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelUpload">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload Resource</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ARU Academy</h3>
+                    <p>Empowering education through technology and innovation.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@aru.academy</p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ARU Academy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/courses.js"></script>
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user')) {
+            window.location.href = 'login.html';
+        }
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userRole = user.role;
+
+        // Update UI based on user role
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userRole').textContent = userRole;
+
+        // Show instructor actions if applicable
+        if (userRole === 'Instructor' || userRole === 'Admin') {
+            document.getElementById('instructorActions').style.display = 'flex';
+        }
+
+        // Check URL parameters for actions
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action');
+        
+        if (action === 'create') {
+            document.getElementById('createCourseBtn').click();
+        } else if (action === 'upload') {
+            document.getElementById('uploadResourceBtn').click();
+        }
+
+        // Initialize courses page
+        initializeCoursesPage();
+        
+        // Initialize courses service and load courses
+        const coursesService = new CoursesService();
+        coursesService.loadCourses();
+    </script>
+</body>
+</html>
+

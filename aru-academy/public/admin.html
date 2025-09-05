@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - ARU Academy</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        /* Admin Section Styles */
+        .admin-section-content {
+            display: none;
+            padding: 2rem 0;
+        }
+        
+        .admin-section-content.active {
+            display: block;
+        }
+        
+        .admin-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 1rem;
+        }
+        
+        .nav-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            background: #f1f5f9;
+            color: #334155;
+        }
+        
+        .nav-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .overview-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .overview-card h3 {
+            margin: 0 0 1rem 0;
+            color: #334155;
+            font-size: 1.1rem;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
+        .quick-actions {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .quick-actions h3 {
+            margin: 0 0 1rem 0;
+            color: #334155;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .system-status {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .status-indicator {
+            font-size: 1.2rem;
+        }
+        
+        /* Analytics Styles */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .analytics-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .analytics-card h3 {
+            margin: 0 0 1rem 0;
+            color: #334155;
+            font-size: 1.1rem;
+        }
+        
+        .chart-container {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .simple-chart {
+            width: 100%;
+        }
+        
+        .simple-chart h5 {
+            margin: 0 0 1rem 0;
+            color: #475569;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .chart-data {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .chart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: #f8fafc;
+            border-radius: 6px;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .chart-label {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .chart-value {
+            font-weight: 600;
+            color: #1e293b;
+            background: #e0e7ff;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="dashboard.html">
+                        <h1>ARU Academy</h1>
+                    </a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                        <li><a href="ai-tutor.html">AI Tutor</a></li>
+                        <li><a href="admin.html" class="active">Admin</a></li>
+                    </ul>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span id="userName">Loading...</span>
+                        <span class="user-role" id="userRole">Loading...</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="dropdown-toggle" id="userMenuToggle">
+                            <span class="avatar">👤</span>
+                        </button>
+                        <div class="dropdown-menu" id="userMenu">
+                            <a href="profile.html">Profile</a>
+                            <a href="#" id="logoutBtn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="admin-section">
+            <div class="container">
+                <div class="admin-header">
+                    <h1>Admin Dashboard</h1>
+                    <p>Manage users, departments, and monitor system health</p>
+                </div>
+
+                <!-- Admin Navigation -->
+                <div class="admin-nav">
+                    <button class="nav-btn active" data-section="overview">Overview</button>
+                    <button class="nav-btn" data-section="users">Users</button>
+                    <button class="nav-btn" data-section="departments">Departments</button>
+                    <button class="nav-btn" data-section="pending">Pending Approvals</button>
+                    <button class="nav-btn" data-section="analytics">Analytics</button>
+                    <button class="nav-btn" data-section="system">System Health</button>
+                </div>
+
+                <!-- Overview Section -->
+                <div class="admin-section-content active" id="overviewSection">
+                    <div class="overview-grid">
+                        <div class="overview-card">
+                            <h3>Total Users</h3>
+                            <div class="stat-number" id="totalUsers">Loading...</div>
+                            <div class="stat-breakdown">
+                                <span>Students: <span id="totalStudents">Loading...</span></span>
+                                <span>Instructors: <span id="totalInstructors">Loading...</span></span>
+                                <span>Admins: <span id="totalAdmins">Loading...</span></span>
+                            </div>
+                        </div>
+                        <div class="overview-card">
+                            <h3>Pending Approvals</h3>
+                            <div class="stat-number" id="pendingApprovals">Loading...</div>
+                            <button class="btn btn-primary btn-sm" onclick="window.adminService.loadSectionData('pending')">Review</button>
+                        </div>
+                        <div class="overview-card">
+                            <h3>Total Courses</h3>
+                            <div class="stat-number" id="totalCourses">Loading...</div>
+                            <div class="stat-breakdown">
+                                <span>Active: <span id="activeCourses">Loading...</span></span>
+                            </div>
+                        </div>
+                        <div class="overview-card">
+                            <h3>System Status</h3>
+                            <div class="system-status">
+                                <span class="status-item">
+                                    <span class="status-indicator" id="dbStatus">🔄</span>
+                                    Database
+                                </span>
+                                <span class="status-item">
+                                    <span class="status-indicator" id="aiStatus">🔄</span>
+                                    AI Service
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions">
+                        <h3>Quick Actions</h3>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="window.adminService.loadSectionData('users')">Manage Users</button>
+                            <button class="btn btn-outline" onclick="window.adminService.loadSectionData('departments')">Manage Departments</button>
+                            <button class="btn btn-outline" onclick="window.adminService.loadSectionData('pending')">Review Pending</button>
+                            <button class="btn btn-outline" onclick="window.adminService.loadSectionData('analytics')">View Analytics</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Section -->
+                <div class="admin-section-content" id="usersSection">
+                    <div class="section-header">
+                        <h2>User Management</h2>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" id="importUsersBtn">Import Users</button>
+                            <button class="btn btn-outline" id="exportUsersBtn">Export Users</button>
+                        </div>
+                    </div>
+
+                    <div class="filters-section">
+                        <div class="search-box">
+                            <input type="text" id="userSearchInput" placeholder="Search users...">
+                            <button class="search-btn">🔍</button>
+                        </div>
+                        <div class="filter-options">
+                            <select id="userRoleFilter">
+                                <option value="">All Roles</option>
+                                <option value="student">Student</option>
+                                <option value="instructor">Instructor</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <select id="userStatusFilter">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="pending">Pending</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+                            <select id="userDepartmentFilter">
+                                <option value="">All Departments</option>
+                                <option value="1">Computer Science</option>
+                                <option value="2">Electrical Engineering</option>
+                                <option value="3">Mechanical Engineering</option>
+                                <option value="4">Business</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="users-table-container">
+                        <table class="data-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Loading users...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination" id="usersPagination" style="display: none;">
+                        <button class="btn btn-outline" id="usersPrevPage">Previous</button>
+                        <span class="page-info" id="usersPageInfo">Page 1 of 1</span>
+                        <button class="btn btn-outline" id="usersNextPage">Next</button>
+                    </div>
+                </div>
+
+                <!-- Departments Section -->
+                <div class="admin-section-content" id="departmentsSection">
+                    <div class="section-header">
+                        <h2>Department Management</h2>
+                        <button class="btn btn-primary" id="createDepartmentBtn">Create Department</button>
+                    </div>
+
+                    <div class="departments-grid" id="departmentsGrid">
+                        <div class="loading-spinner">Loading departments...</div>
+                    </div>
+                </div>
+
+                <!-- Pending Approvals Section -->
+                <div class="admin-section-content" id="pendingSection">
+                    <div class="section-header">
+                        <h2>Pending User Approvals</h2>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" id="approveAllBtn">Approve All</button>
+                            <button class="btn btn-outline" id="denyAllBtn">Deny All</button>
+                        </div>
+                    </div>
+
+                    <div class="pending-users-list" id="pendingUsersList">
+                        <div class="loading-spinner">Loading pending users...</div>
+                    </div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div class="admin-section-content" id="analyticsSection">
+                    <div class="section-header">
+                        <h2>System Analytics</h2>
+                        <div class="header-actions">
+                            <select id="analyticsPeriod">
+                                <option value="7">Last 7 days</option>
+                                <option value="30" selected>Last 30 days</option>
+                                <option value="90">Last 90 days</option>
+                                <option value="365">Last year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h3>User Activity</h3>
+                            <div class="chart-container" id="userActivityChart">
+                                <p class="text-muted">Chart loading...</p>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <h3>Resource Usage</h3>
+                            <div class="chart-container" id="resourceUsageChart">
+                                <p class="text-muted">Chart loading...</p>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <h3>AI Service Usage</h3>
+                            <div class="chart-container" id="aiUsageChart">
+                                <p class="text-muted">Chart loading...</p>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <h3>Quiz Performance</h3>
+                            <div class="chart-container" id="quizPerformanceChart">
+                                <p class="text-muted">Chart loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Health Section -->
+                <div class="admin-section-content" id="systemSection">
+                    <div class="section-header">
+                        <h2>System Health</h2>
+                        <button class="btn btn-outline" id="refreshHealthBtn">Refresh</button>
+                    </div>
+
+                    <div class="health-grid">
+                        <div class="health-card">
+                            <h3>Database Status</h3>
+                            <div class="health-status" id="dbHealthStatus">
+                                <span class="status-indicator">🔄</span>
+                                <span class="status-text">Checking...</span>
+                            </div>
+                            <div class="health-details" id="dbHealthDetails">
+                                <p>Connection: <span id="dbConnection">Checking...</span></p>
+                                <p>Response Time: <span id="dbResponseTime">--</span></p>
+                            </div>
+                        </div>
+                        <div class="health-card">
+                            <h3>AI Service Status</h3>
+                            <div class="health-status" id="aiHealthStatus">
+                                <span class="status-indicator">🔄</span>
+                                <span class="status-text">Checking...</span>
+                            </div>
+                            <div class="health-details" id="aiHealthDetails">
+                                <p>API Status: <span id="aiApiStatus">Checking...</span></p>
+                                <p>Response Time: <span id="aiResponseTime">--</span></p>
+                            </div>
+                        </div>
+                        <div class="health-card">
+                            <h3>Storage Status</h3>
+                            <div class="health-status" id="storageHealthStatus">
+                                <span class="status-indicator">🔄</span>
+                                <span class="status-text">Checking...</span>
+                            </div>
+                            <div class="health-details" id="storageHealthDetails">
+                                <p>Available Space: <span id="storageSpace">Checking...</span></p>
+                                <p>File Count: <span id="fileCount">--</span></p>
+                            </div>
+                        </div>
+                        <div class="health-card">
+                            <h3>Recent Errors</h3>
+                            <div class="error-log" id="errorLog">
+                                <p class="text-muted">No recent errors</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Import Users Modal -->
+    <div class="modal" id="importUsersModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Import Users</h3>
+                <button class="modal-close" id="closeImportModal">&times;</button>
+            </div>
+            <form id="importUsersForm">
+                <div class="form-group">
+                    <label for="csvFile">CSV File</label>
+                    <input type="file" id="csvFile" name="csv_file" accept=".csv" required>
+                    <small>Upload a CSV file with columns: email, name, role, department_id</small>
+                </div>
+                <div class="form-group">
+                    <label for="importOptions">Import Options</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="sendWelcomeEmail" name="send_welcome_email">
+                            <span class="checkmark"></span>
+                            Send welcome email to new users
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="autoApprove" name="auto_approve" checked>
+                            <span class="checkmark"></span>
+                            Auto-approve users
+                        </label>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelImport">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Import Users</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Department Modal -->
+    <div class="modal" id="createDepartmentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Department</h3>
+                <button class="modal-close" id="closeDepartmentModal">&times;</button>
+            </div>
+            <form id="createDepartmentForm">
+                <div class="form-group">
+                    <label for="departmentName">Department Name</label>
+                    <input type="text" id="departmentName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="departmentDescription">Description</label>
+                    <textarea id="departmentDescription" name="description" rows="4" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelDepartment">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ARU Academy</h3>
+                    <p>Empowering education through technology and innovation.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@aru.academy</p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ARU Academy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        // Check authentication and admin role
+        if (!localStorage.getItem('user')) {
+            window.location.href = 'login.html';
+        }
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user.role !== 'Admin') {
+            window.location.href = 'dashboard.html';
+        }
+
+        // Update UI
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userRole').textContent = user.role;
+
+        // Initialize admin service and make it globally accessible
+        window.adminService = new AdminService();
+
+        // Initialize navigation after DOM is ready
+        function initializeNavigation() {
+            console.log('Initializing navigation...');
+            const navButtons = document.querySelectorAll('.nav-btn');
+            console.log('Found navigation buttons:', navButtons.length);
+            
+            // Admin navigation
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Navigation clicked:', this.dataset.section);
+                    
+                    // Remove active class from all buttons and sections
+                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.admin-section-content').forEach(s => s.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Show corresponding section
+                    const sectionName = this.dataset.section;
+                    const targetSection = document.getElementById(sectionName + 'Section');
+                    if (targetSection) {
+                        targetSection.classList.add('active');
+                        console.log('Switched to section:', sectionName);
+                        
+                        // Load section data using admin service
+                        window.adminService.loadSectionData(sectionName);
+                    } else {
+                        console.error('Section not found:', sectionName + 'Section');
+                    }
+                });
+            });
+            
+            // Load overview data by default
+            window.adminService.loadSectionData('overview');
+        }
+
+        // Initialize navigation when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeNavigation);
+        } else {
+            initializeNavigation();
+        }
+        
+        // Fallback: Re-initialize navigation after a short delay
+        setTimeout(() => {
+            console.log('Re-initializing navigation as fallback');
+            initializeNavigation();
+        }, 1000);
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            try {
+                await api.post('/api/auth/logout');
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // User menu toggle
+        document.getElementById('userMenuToggle').addEventListener('click', function() {
+            document.getElementById('userMenu').classList.toggle('show');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.getElementById('userMenu').classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
+

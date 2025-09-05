@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tutor - ARU Academy</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="dashboard.html">
+                        <h1>ARU Academy</h1>
+                    </a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                        <li><a href="ai-tutor.html" class="active">AI Tutor</a></li>
+                        <li id="adminLink" style="display: none;"><a href="admin.html">Admin</a></li>
+                    </ul>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span id="userName">Loading...</span>
+                        <span class="user-role" id="userRole">Loading...</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="dropdown-toggle" id="userMenuToggle">
+                            <span class="avatar">👤</span>
+                        </button>
+                        <div class="dropdown-menu" id="userMenu">
+                            <a href="profile.html">Profile</a>
+                            <a href="#" id="logoutBtn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="ai-tutor-section">
+            <div class="container">
+                <div class="ai-tutor-header">
+                    <h1>🤖 AI Tutor</h1>
+                    <p>Get instant help with your studies using our AI-powered tutor</p>
+                </div>
+
+                <!-- AI Tutor Navigation -->
+                <div class="ai-tutor-nav">
+                    <button class="nav-btn active" data-tab="ask">💬 Ask Question</button>
+                    <button class="nav-btn" data-tab="generate">📝 Generate Quiz</button>
+                    <button class="nav-btn" data-tab="history">📚 Question History</button>
+                </div>
+
+                <!-- Ask Question Tab -->
+                <div class="tab-content active" id="askTab">
+                    <div class="ai-chat-container">
+                        <div class="chat-header">
+                            <h3>💬 Chat with AI Tutor</h3>
+                            <p>Ask me anything about your studies - I'm here to help!</p>
+                        </div>
+                        
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message ai-message">
+                                <div class="message-avatar">🤖</div>
+                                <div class="message-content">
+                                    <p>Hello! I'm your AI tutor. I can help you understand complex topics, explain concepts, and provide detailed answers to your questions. What would you like to learn about today?</p>
+                                    <div class="message-time">Just now</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chat-input-container">
+                            <form id="questionForm" class="chat-form">
+                                <div class="input-group">
+                                    <input type="text" id="questionInput" placeholder="Type your question here..." required>
+                                    <button type="submit" class="btn btn-primary" id="askBtn">
+                                        <span class="btn-text">Ask</span>
+                                        <span class="btn-loading" style="display: none;">🔄</span>
+                                    </button>
+                                </div>
+                                <div class="input-options">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="includeContext" checked>
+                                        <span class="checkmark"></span>
+                                        Include course context for better answers
+                                    </label>
+                                </div>
+                                
+                                <div class="quick-questions">
+                                    <div class="quick-question" onclick="askQuickQuestion('Explain this concept in simple terms')">
+                                        💡 Explain in simple terms
+                                    </div>
+                                    <div class="quick-question" onclick="askQuickQuestion('Give me examples of this topic')">
+                                        📝 Give me examples
+                                    </div>
+                                    <div class="quick-question" onclick="askQuickQuestion('What are the key points to remember?')">
+                                        🎯 Key points
+                                    </div>
+                                    <div class="quick-question" onclick="askQuickQuestion('How does this relate to other topics?')">
+                                        🔗 How does this relate?
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generate Quiz Tab -->
+                <div class="tab-content" id="generateTab">
+                    <div class="quiz-generator-container">
+                        <div class="generator-header">
+                            <h3>Generate Quiz Questions</h3>
+                            <p>Create custom quizzes from any topic or resource</p>
+                        </div>
+
+                        <form id="quizGeneratorForm" class="generator-form">
+                            <div class="form-group">
+                                <label for="quizTopic">Topic or Subject</label>
+                                <input type="text" id="quizTopic" name="topic" placeholder="e.g., Python Programming, Calculus, Business Ethics" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="quizType">Quiz Type</label>
+                                <select id="quizType" name="type" required>
+                                    <option value="">Select Quiz Type</option>
+                                    <option value="mixed">Mixed (MCQ + Short Answer)</option>
+                                    <option value="mcq">Multiple Choice Only</option>
+                                    <option value="short">Short Answer Only</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="questionCount">Number of Questions</label>
+                                <select id="questionCount" name="count" required>
+                                    <option value="5">5 Questions</option>
+                                    <option value="10" selected>10 Questions</option>
+                                    <option value="15">15 Questions</option>
+                                    <option value="20">20 Questions</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="difficultyLevel">Difficulty Level</label>
+                                <select id="difficultyLevel" name="difficulty" required>
+                                    <option value="beginner">Beginner</option>
+                                    <option value="intermediate" selected>Intermediate</option>
+                                    <option value="advanced">Advanced</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="courseContext">Course Context (Optional)</label>
+                                <select id="courseContext" name="course_id">
+                                    <option value="">Select Course for Context</option>
+                                </select>
+                                <small>Selecting a course will help generate more relevant questions</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="additionalContext">Additional Context</label>
+                                <textarea id="additionalContext" name="context" rows="4" placeholder="Provide any additional context, specific concepts, or learning objectives..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-full" id="generateQuizBtn">
+                                <span class="btn-text">Generate Quiz</span>
+                                <span class="btn-loading" style="display: none;">🔄</span>
+                            </button>
+                        </form>
+
+                        <div class="generated-quiz" id="generatedQuiz" style="display: none;">
+                            <div class="quiz-header">
+                                <h4>Generated Quiz</h4>
+                                <button class="btn btn-outline btn-sm" id="saveQuizBtn">Save Quiz</button>
+                            </div>
+                            <div class="quiz-content" id="quizContent">
+                                <!-- Generated quiz content will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question History Tab -->
+                <div class="tab-content" id="historyTab">
+                    <div class="history-container">
+                        <div class="history-header">
+                            <h3>Your Question History</h3>
+                            <div class="history-filters">
+                                <select id="historyFilter">
+                                    <option value="all">All Questions</option>
+                                    <option value="recent">Recent</option>
+                                    <option value="favorites">Favorites</option>
+                                </select>
+                                <button class="btn btn-outline btn-sm" id="clearHistoryBtn">Clear History</button>
+                            </div>
+                        </div>
+
+                        <div class="history-list" id="historyList">
+                            <div class="loading-spinner">Loading history...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Save Quiz Modal -->
+    <div class="modal" id="saveQuizModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Save Quiz</h3>
+                <button class="modal-close" id="closeSaveModal">&times;</button>
+            </div>
+            <form id="saveQuizForm">
+                <div class="form-group">
+                    <label for="quizTitle">Quiz Title</label>
+                    <input type="text" id="quizTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="quizDescription">Description</label>
+                    <textarea id="quizDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="quizCourse">Assign to Course (Optional)</label>
+                    <select id="quizCourse" name="course_id">
+                        <option value="">No Course Assignment</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelSave">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Quiz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ARU Academy</h3>
+                    <p>Empowering education through technology and innovation.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@aru.academy</p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ARU Academy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // AI Tutor functionality
+        function askQuickQuestion(question) {
+            document.getElementById('questionInput').value = question;
+            document.getElementById('questionForm').dispatchEvent(new Event('submit'));
+        }
+        
+        function addMessage(content, isUser = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${isUser ? '👤' : '🤖'}</div>
+                <div class="message-content">
+                    <p>${content}</p>
+                    <div class="message-time">${timeString}</div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message ai-message';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        AI is typing
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+        
+        async function askAIQuestion(question) {
+            try {
+                showTypingIndicator();
+                
+                const response = await api.post('/api/ai/ask', {
+                    question: question,
+                    include_context: document.getElementById('includeContext').checked
+                });
+                
+                hideTypingIndicator();
+                
+                if (response.success) {
+                    addMessage(response.data.answer);
+                } else {
+                    addMessage('Sorry, I encountered an error. Please try again.');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                console.error('Error asking AI question:', error);
+                addMessage('Sorry, I encountered an error. Please try again.');
+            }
+        }
+    </script>
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user')) {
+            window.location.href = 'login.html';
+        }
+        
+        // Handle form submission
+        document.getElementById('questionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const questionInput = document.getElementById('questionInput');
+            const question = questionInput.value.trim();
+            
+            if (!question) return;
+            
+            // Add user message
+            addMessage(question, true);
+            
+            // Clear input
+            questionInput.value = '';
+            
+            // Ask AI
+            await askAIQuestion(question);
+        });
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userRole = user.role;
+
+        // Update UI based on user role
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userRole').textContent = userRole;
+
+        // Show admin link if applicable
+        if (userRole === 'Admin') {
+            document.getElementById('adminLink').style.display = 'block';
+        }
+
+        // AI Tutor functionality
+        let chatHistory = [];
+        let currentQuiz = null;
+
+        // Tab functionality
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Show corresponding content
+                const tabName = this.dataset.tab;
+                document.getElementById(tabName + 'Tab').classList.add('active');
+                
+                // Load tab-specific data
+                if (tabName === 'history') {
+                    loadQuestionHistory();
+                } else if (tabName === 'generate') {
+                    loadUserCourses();
+                }
+            });
+        });
+
+        // Question form submission
+        document.getElementById('questionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const questionInput = document.getElementById('questionInput');
+            const question = questionInput.value.trim();
+            
+            if (!question) return;
+
+            const includeContext = document.getElementById('includeContext').checked;
+            
+            // Add user question to chat
+            addMessage('user', question);
+            questionInput.value = '';
+
+            // Show loading state
+            const askBtn = document.getElementById('askBtn');
+            const btnText = askBtn.querySelector('.btn-text');
+            const btnLoading = askBtn.querySelector('.btn-loading');
+            
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline';
+            askBtn.disabled = true;
+
+            try {
+                // Prepare request data
+                const requestData = {
+                    question: question,
+                    include_context: includeContext
+                };
+
+                // If including context, get user's current courses
+                if (includeContext) {
+                    try {
+                        const coursesResponse = await api.get('/api/courses/');
+                        if (coursesResponse.success && coursesResponse.data.length > 0) {
+                            requestData.course_context = coursesResponse.data.map(c => ({
+                                id: c.id,
+                                title: c.title,
+                                description: c.description
+                            }));
+                        }
+                    } catch (error) {
+                        console.error('Error loading course context:', error);
+                    }
+                }
+
+                // Send question to AI
+                const response = await api.post('/api/ai/ask', requestData);
+
+                if (response.success) {
+                    const answer = response.data.answer;
+                    addMessage('ai', answer);
+                    
+                    // Save to history
+                    saveQuestionToHistory(question, answer);
+                } else {
+                    addMessage('ai', 'Sorry, I encountered an error while processing your question. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error asking question:', error);
+                addMessage('ai', 'Sorry, I encountered an error while processing your question. Please try again.');
+            } finally {
+                // Reset button state
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+                askBtn.disabled = false;
+            }
+        });
+
+        // Quiz generator form submission
+        document.getElementById('quizGeneratorForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const quizData = {
+                topic: formData.get('topic'),
+                type: formData.get('type'),
+                count: parseInt(formData.get('count')),
+                difficulty: formData.get('difficulty'),
+                course_id: formData.get('course_id') || null,
+                context: formData.get('context')
+            };
+
+            // Show loading state
+            const generateBtn = document.getElementById('generateQuizBtn');
+            const btnText = generateBtn.querySelector('.btn-text');
+            const btnLoading = generateBtn.querySelector('.btn-loading');
+            
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline';
+            generateBtn.disabled = true;
+
+            try {
+                const response = await api.post('/api/ai/generate-questions', quizData);
+
+                if (response.success) {
+                    currentQuiz = response.data;
+                    displayGeneratedQuiz(currentQuiz);
+                    document.getElementById('generatedQuiz').style.display = 'block';
+                } else {
+                    showAlert(response.message || 'Failed to generate quiz', 'error');
+                }
+            } catch (error) {
+                console.error('Error generating quiz:', error);
+                showAlert('An error occurred while generating the quiz', 'error');
+            } finally {
+                // Reset button state
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+                generateBtn.disabled = false;
+            }
+        });
+
+        // Save quiz functionality
+        document.getElementById('saveQuizBtn').addEventListener('click', function() {
+            if (currentQuiz) {
+                document.getElementById('quizTitle').value = currentQuiz.topic || 'Generated Quiz';
+                document.getElementById('saveQuizModal').style.display = 'block';
+                document.body.classList.add('modal-open');
+            }
+        });
+
+        // Save quiz form submission
+        document.getElementById('saveQuizForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const quizData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                course_id: formData.get('course_id') || null,
+                questions: currentQuiz.questions
+            };
+
+            try {
+                showLoading();
+                
+                const response = await api.post('/api/quizzes/', quizData);
+
+                if (response.success) {
+                    showAlert('Quiz saved successfully!', 'success');
+                    document.getElementById('saveQuizModal').style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                    document.getElementById('generatedQuiz').style.display = 'none';
+                    currentQuiz = null;
+                } else {
+                    showAlert(response.message || 'Failed to save quiz', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving quiz:', error);
+                showAlert('An error occurred while saving the quiz', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Modal close functionality
+        document.getElementById('closeSaveModal').addEventListener('click', function() {
+            document.getElementById('saveQuizModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+
+        document.getElementById('cancelSave').addEventListener('click', function() {
+            document.getElementById('saveQuizModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        });
+
+        // Clear history functionality
+        document.getElementById('clearHistoryBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear your question history? This action cannot be undone.')) {
+                clearQuestionHistory();
+            }
+        });
+
+        // History filter functionality
+        document.getElementById('historyFilter').addEventListener('change', function() {
+            loadQuestionHistory(this.value);
+        });
+
+        // Helper functions
+        function addMessage(sender, content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            const avatar = sender === 'user' ? '👤' : '🤖';
+            const messageContent = sender === 'user' ? content : formatAIResponse(content);
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">
+                    ${messageContent}
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Add to chat history
+            chatHistory.push({ sender, content, timestamp: new Date() });
+        }
+
+        function formatAIResponse(content) {
+            // Convert markdown-like formatting to HTML
+            return content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>')
+                .replace(/```(.*?)```/g, '<pre><code>$1</code></pre>')
+                .replace(/`(.*?)`/g, '<code>$1</code>');
+        }
+
+        function displayGeneratedQuiz(quiz) {
+            const quizContent = document.getElementById('quizContent');
+            
+            let questionsHTML = '';
+            quiz.questions.forEach((question, index) => {
+                if (question.type === 'multiple_choice') {
+                    questionsHTML += `
+                        <div class="quiz-question">
+                            <h5>Question ${index + 1}</h5>
+                            <p>${question.question}</p>
+                            <div class="question-options">
+                                ${question.options.map((option, optIndex) => 
+                                    `<label class="option-label">
+                                        <input type="radio" name="q${index}" value="${optIndex}" disabled>
+                                        <span class="option-text">${option}</span>
+                                    </label>`
+                                ).join('')}
+                            </div>
+                            <div class="question-answer">
+                                <strong>Answer:</strong> ${question.answer}
+                            </div>
+                            ${question.explanation ? `<div class="question-explanation"><strong>Explanation:</strong> ${question.explanation}</div>` : ''}
+                        </div>
+                    `;
+                } else {
+                    questionsHTML += `
+                        <div class="quiz-question">
+                            <h5>Question ${index + 1}</h5>
+                            <p>${question.question}</p>
+                            <div class="question-answer">
+                                <strong>Answer:</strong> ${question.answer}
+                            </div>
+                            ${question.explanation ? `<div class="question-explanation"><strong>Explanation:</strong> ${question.explanation}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+            
+            quizContent.innerHTML = questionsHTML;
+        }
+
+        async function loadUserCourses() {
+            try {
+                const response = await api.get('/api/courses/');
+                if (response.success) {
+                    populateCourseSelects(response.data);
+                }
+            } catch (error) {
+                console.error('Error loading user courses:', error);
+            }
+        }
+
+        function populateCourseSelects(courses) {
+            const courseContext = document.getElementById('courseContext');
+            const quizCourse = document.getElementById('quizCourse');
+            
+            if (courseContext) {
+                courseContext.innerHTML = '<option value="">Select Course for Context</option>';
+                courses.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = course.title;
+                    courseContext.appendChild(option);
+                });
+            }
+            
+            if (quizCourse) {
+                quizCourse.innerHTML = '<option value="">No Course Assignment</option>';
+                courses.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = course.title;
+                    quizCourse.appendChild(option);
+                });
+            }
+        }
+
+        async function loadQuestionHistory(filter = 'all') {
+            try {
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '<div class="loading-spinner">Loading history...</div>';
+                
+                const response = await api.get('/api/ai/logs', { filter });
+                
+                if (response.success && response.data.length > 0) {
+                    const historyHTML = response.data.map(log => `
+                        <div class="history-item">
+                            <div class="history-question">
+                                <strong>Q:</strong> ${log.request_data.question || 'Question not available'}
+                            </div>
+                            <div class="history-answer">
+                                <strong>A:</strong> ${log.response_data.answer || 'Answer not available'}
+                            </div>
+                            <div class="history-meta">
+                                <span class="history-date">${new Date(log.created_at).toLocaleDateString()}</span>
+                                <span class="history-time">${new Date(log.created_at).toLocaleTimeString()}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    historyList.innerHTML = historyHTML;
+                } else {
+                    historyList.innerHTML = '<p class="text-muted">No question history found</p>';
+                }
+            } catch (error) {
+                console.error('Error loading question history:', error);
+                document.getElementById('historyList').innerHTML = '<p class="text-muted">Error loading history</p>';
+            }
+        }
+
+        function saveQuestionToHistory(question, answer) {
+            // This would typically be handled by the backend when logging AI calls
+            // For now, we'll just store it locally
+            const historyItem = {
+                question,
+                answer,
+                timestamp: new Date()
+            };
+            
+            let history = JSON.parse(localStorage.getItem('aiQuestionHistory') || '[]');
+            history.unshift(historyItem);
+            
+            // Keep only last 50 questions
+            if (history.length > 50) {
+                history = history.slice(0, 50);
+            }
+            
+            localStorage.setItem('aiQuestionHistory', JSON.stringify(history));
+        }
+
+        function clearQuestionHistory() {
+            localStorage.removeItem('aiQuestionHistory');
+            loadQuestionHistory();
+            showAlert('Question history cleared successfully', 'success');
+        }
+
+        // Load initial data
+        loadUserCourses();
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            try {
+                await api.post('/api/auth/logout');
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // User menu toggle
+        document.getElementById('userMenuToggle').addEventListener('click', function() {
+            document.getElementById('userMenu').classList.toggle('show');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.getElementById('userMenu').classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
+

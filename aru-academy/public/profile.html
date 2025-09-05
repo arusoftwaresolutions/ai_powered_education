@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - ARU Academy</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="dashboard.html">
+                        <h1>ARU Academy</h1>
+                    </a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                        <li><a href="ai-tutor.html">AI Tutor</a></li>
+                        <li id="adminLink" style="display: none;"><a href="admin.html">Admin</a></li>
+                    </ul>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span id="userName">Loading...</span>
+                        <span class="user-role" id="userRole">Loading...</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="dropdown-toggle" id="userMenuToggle">
+                            <span class="avatar">👤</span>
+                        </button>
+                        <div class="dropdown-menu" id="userMenu">
+                            <a href="profile.html" class="active">Profile</a>
+                            <a href="#" id="logoutBtn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="profile-section">
+            <div class="container">
+                <div class="profile-header">
+                    <h1>👤 My Profile</h1>
+                    <p>Manage your account settings and view your activity</p>
+                </div>
+
+                <div class="profile-content">
+                    <div class="profile-sidebar">
+                        <div class="profile-card">
+                            <div class="profile-avatar">
+                                <span class="avatar-large">👤</span>
+                            </div>
+                            <div class="profile-info">
+                                <h3 id="profileName">Loading...</h3>
+                                <p class="profile-email" id="profileEmail">Loading...</p>
+                                <p class="profile-role" id="profileRole">Loading...</p>
+                                <p class="profile-department" id="profileDepartment">Loading...</p>
+                            </div>
+                            <div class="profile-stats">
+                                <div class="stat-item">
+                                    <span class="stat-number" id="profileCourses">0</span>
+                                    <span class="stat-label">Courses</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number" id="profileQuizzes">0</span>
+                                    <span class="stat-label">Quizzes</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number" id="profileProgress">0%</span>
+                                    <span class="stat-label">Progress</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-main">
+                        <!-- Profile Navigation -->
+                        <div class="profile-nav">
+                            <button class="nav-btn active" data-tab="personal">Personal Info</button>
+                            <button class="nav-btn" data-tab="security">Security</button>
+                            <button class="nav-btn" data-tab="activity">Activity</button>
+                            <button class="nav-btn" data-tab="preferences">Preferences</button>
+                        </div>
+
+                        <!-- Personal Info Tab -->
+                        <div class="tab-content active" id="personal">
+                            <div class="content-card">
+                                <div class="card-header">
+                                    <h3>Personal Information</h3>
+                                    <button class="btn btn-outline btn-sm" id="editPersonalBtn">Edit</button>
+                                </div>
+                                <form id="personalInfoForm" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="editName">Full Name</label>
+                                        <input type="text" id="editName" name="name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editEmail">Email Address</label>
+                                        <input type="email" id="editEmail" name="email" required>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" class="btn btn-outline" id="cancelPersonal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    </div>
+                                </form>
+                                <div class="info-display" id="personalInfoDisplay">
+                                    <div class="info-row">
+                                        <span class="info-label">Full Name:</span>
+                                        <span class="info-value" id="displayName">Loading...</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Email Address:</span>
+                                        <span class="info-value" id="displayEmail">Loading...</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Role:</span>
+                                        <span class="info-value" id="displayRole">Loading...</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Department:</span>
+                                        <span class="info-value" id="displayDepartment">Loading...</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Member Since:</span>
+                                        <span class="info-value" id="displayMemberSince">Loading...</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Status:</span>
+                                        <span class="info-value">
+                                            <span class="badge badge-success" id="displayStatus">Active</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Tab -->
+                        <div class="tab-content" id="security">
+                            <div class="content-card">
+                                <div class="card-header">
+                                    <h3>Change Password</h3>
+                                </div>
+                                <form id="changePasswordForm">
+                                    <div class="form-group">
+                                        <label for="currentPassword">Current Password</label>
+                                        <input type="password" id="currentPassword" name="current_password" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="newPassword">New Password</label>
+                                        <input type="password" id="newPassword" name="new_password" required>
+                                        <small>Must be at least 8 characters long</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirmNewPassword">Confirm New Password</label>
+                                        <input type="password" id="confirmNewPassword" name="confirm_new_password" required>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary">Change Password</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="content-card">
+                                <div class="card-header">
+                                    <h3>Account Security</h3>
+                                </div>
+                                <div class="security-options">
+                                    <div class="security-option">
+                                        <div class="option-info">
+                                            <h4>Two-Factor Authentication</h4>
+                                            <p>Add an extra layer of security to your account</p>
+                                        </div>
+                                        <div class="option-action">
+                                            <button class="btn btn-outline btn-sm" disabled>Coming Soon</button>
+                                        </div>
+                                    </div>
+                                    <div class="security-option">
+                                        <div class="option-info">
+                                            <h4>Login History</h4>
+                                            <p>View your recent login activity</p>
+                                        </div>
+                                        <div class="option-action">
+                                            <button class="btn btn-outline btn-sm" id="viewLoginHistoryBtn">View</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Tab -->
+                        <div class="tab-content" id="activity">
+                            <div class="content-card">
+                                <div class="card-header">
+                                    <h3>Recent Activity</h3>
+                                    <div class="header-actions">
+                                        <select id="activityFilter">
+                                            <option value="all">All Activities</option>
+                                            <option value="courses">Courses</option>
+                                            <option value="quizzes">Quizzes</option>
+                                            <option value="ai">AI Tutor</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="activity-list" id="activityList">
+                                    <div class="loading-spinner">Loading activity...</div>
+                                </div>
+                            </div>
+
+                            <div class="content-card">
+                                <div class="card-header">
+                                    <h3>Learning Progress</h3>
+                                </div>
+                                <div class="progress-overview">
+                                    <div class="progress-item">
+                                        <div class="progress-header">
+                                            <span>Overall Progress</span>
+                                            <span id="overallProgress">0%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="overallProgressFill" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="progress-breakdown">
+                                        <div class="breakdown-item">
+                                            <span>Courses Started</span>
+                                            <span id="coursesStarted">0</span>
+                                        </div>
+                                        <div class="breakdown-item">
+                                            <span>Courses Completed</span>
+                                            <span id="coursesCompleted">0</span>
+                                        </div>
+                                        <div class="breakdown-item">
+                                            <span>Quizzes Taken</span>
+                                            <span id="quizzesTaken">0</span>
+                                        </div>
+                                        <div class="breakdown-item">
+                                            <span>AI Questions Asked</span>
+                                            <span id="aiQuestionsAsked">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferences Tab -->
+                        <div class="tab-content" id="preferences">
+                            <div class="content-card">
+                                <div class="card-header">
+                                    <h3>Notification Preferences</h3>
+                                </div>
+                                <div class="preferences-form">
+                                    <div class="preference-group">
+                                        <h4>Email Notifications</h4>
+                                        <div class="checkbox-group">
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" id="emailCourses" checked>
+                                                <span class="checkmark"></span>
+                                                New course announcements
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" id="emailQuizzes" checked>
+                                                <span class="checkmark"></span>
+                                                Quiz reminders and results
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" id="emailUpdates">
+                                                <span class="checkmark"></span>
+                                                System updates and maintenance
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="preference-group">
+                                        <h4>Display Preferences</h4>
+                                        <div class="form-group">
+                                            <label for="themePreference">Theme</label>
+                                            <select id="themePreference">
+                                                <option value="light">Light</option>
+                                                <option value="dark">Dark</option>
+                                                <option value="auto">Auto</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="languagePreference">Language</label>
+                                            <select id="languagePreference">
+                                                <option value="en">English</option>
+                                                <option value="es">Spanish</option>
+                                                <option value="fr">French</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" class="btn btn-primary" id="savePreferencesBtn">Save Preferences</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ARU Academy</h3>
+                    <p>Empowering education through technology and innovation.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="courses.html">Courses</a></li>
+                        <li><a href="quizzes.html">Quizzes</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@aru.academy</p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ARU Academy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('user')) {
+            window.location.href = 'login.html';
+        }
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userRole = user.role;
+
+        // Update UI based on user role
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userRole').textContent = userRole;
+
+        // Show admin link if applicable
+        if (userRole === 'Admin') {
+            document.getElementById('adminLink').style.display = 'block';
+        }
+
+        // Load profile data
+        loadProfileData();
+
+        // Tab functionality
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Show corresponding tab content
+                const tabId = this.getAttribute('data-tab');
+                const tabContent = document.getElementById(tabId);
+                if (tabContent) {
+                    tabContent.classList.add('active');
+                }
+                
+                // Load tab-specific data
+                if (tabId === 'activity') {
+                    loadActivityData();
+                }
+            });
+        });
+
+        // Edit personal info functionality
+        document.getElementById('editPersonalBtn').addEventListener('click', function() {
+            document.getElementById('personalInfoDisplay').style.display = 'none';
+            document.getElementById('personalInfoForm').style.display = 'block';
+            
+            // Populate form with current values
+            document.getElementById('editName').value = user.name;
+            document.getElementById('editEmail').value = user.email;
+        });
+
+        document.getElementById('cancelPersonal').addEventListener('click', function() {
+            document.getElementById('personalInfoForm').style.display = 'none';
+            document.getElementById('personalInfoDisplay').style.display = 'block';
+        });
+
+        // Personal info form submission
+        document.getElementById('personalInfoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email')
+            };
+
+            try {
+                showLoading();
+                
+                const response = await api.put('/api/auth/profile', data);
+                
+                if (response.success) {
+                    showAlert('Profile updated successfully', 'success');
+                    
+                    // Update local storage
+                    user.name = data.name;
+                    user.email = data.email;
+                    localStorage.setItem('user', JSON.stringify(user));
+                    
+                    // Update UI
+                    document.getElementById('userName').textContent = data.name;
+                    document.getElementById('profileName').textContent = data.name;
+                    document.getElementById('displayName').textContent = data.name;
+                    document.getElementById('displayEmail').textContent = data.email;
+                    
+                    // Hide form
+                    document.getElementById('personalInfoForm').style.display = 'none';
+                    document.getElementById('personalInfoDisplay').style.display = 'block';
+                } else {
+                    showAlert(response.message || 'Failed to update profile', 'error');
+                }
+            } catch (error) {
+                showAlert('An error occurred while updating profile', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Change password form submission
+        document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const newPassword = formData.get('new_password');
+            const confirmPassword = formData.get('confirm_new_password');
+            
+            if (newPassword !== confirmPassword) {
+                showAlert('New passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showAlert('Password must be at least 8 characters long', 'error');
+                return;
+            }
+            
+            const data = {
+                current_password: formData.get('current_password'),
+                new_password: newPassword
+            };
+
+            try {
+                showLoading();
+                
+                const response = await api.put('/api/auth/change-password', data);
+                
+                if (response.success) {
+                    showAlert('Password changed successfully', 'success');
+                    this.reset();
+                } else {
+                    showAlert(response.message || 'Failed to change password', 'error');
+                }
+            } catch (error) {
+                showAlert('An error occurred while changing password', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Save preferences
+        document.getElementById('savePreferencesBtn').addEventListener('click', function() {
+            showAlert('Preferences saved successfully', 'success');
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            try {
+                await api.post('/api/auth/logout');
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // User menu toggle
+        document.getElementById('userMenuToggle').addEventListener('click', function() {
+            document.getElementById('userMenu').classList.toggle('show');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.getElementById('userMenu').classList.remove('show');
+            }
+        });
+
+        // Functions to load data
+        async function loadProfileData() {
+            try {
+                // Update profile display
+                document.getElementById('profileName').textContent = user.name;
+                document.getElementById('profileEmail').textContent = user.email;
+                document.getElementById('profileRole').textContent = userRole;
+                document.getElementById('profileDepartment').textContent = 'Loading...';
+                
+                document.getElementById('displayName').textContent = user.name;
+                document.getElementById('displayEmail').textContent = user.email;
+                document.getElementById('displayRole').textContent = userRole;
+                document.getElementById('displayDepartment').textContent = 'Loading...';
+                document.getElementById('displayMemberSince').textContent = 'Loading...';
+                
+                // Load additional profile data
+                const profileResponse = await api.get('/api/auth/profile');
+                if (profileResponse.success) {
+                    const profileData = profileResponse.data;
+                    document.getElementById('profileDepartment').textContent = profileData.department_name || 'N/A';
+                    document.getElementById('displayDepartment').textContent = profileData.department_name || 'N/A';
+                    document.getElementById('displayMemberSince').textContent = new Date(profileData.created_at).toLocaleDateString();
+                }
+                
+                // Load profile statistics
+                await loadProfileStats();
+                
+            } catch (error) {
+                console.error('Error loading profile data:', error);
+            }
+        }
+
+        async function loadProfileStats() {
+            try {
+                const [courses, quizzes, progress, aiLogs] = await Promise.all([
+                    api.get('/api/courses/'),
+                    api.get('/api/quizzes/history'),
+                    api.get('/api/resources/progress'),
+                    api.get('/api/ai/logs')
+                ]);
+
+                if (courses.success) {
+                    document.getElementById('profileCourses').textContent = courses.data.length;
+                    document.getElementById('coursesStarted').textContent = courses.data.length;
+                    const completed = courses.data.filter(c => c.progress === 100).length;
+                    document.getElementById('coursesCompleted').textContent = completed;
+                }
+
+                if (quizzes.success) {
+                    document.getElementById('profileQuizzes').textContent = quizzes.data.length;
+                    document.getElementById('quizzesTaken').textContent = quizzes.data.length;
+                }
+
+                if (progress.success) {
+                    const totalResources = progress.data.length;
+                    const completedResources = progress.data.filter(p => p.status === 'Completed').length;
+                    const progressPercentage = totalResources > 0 ? Math.round((completedResources / totalResources) * 100) : 0;
+                    
+                    document.getElementById('profileProgress').textContent = progressPercentage + '%';
+                    document.getElementById('overallProgress').textContent = progressPercentage + '%';
+                    document.getElementById('overallProgressFill').style.width = progressPercentage + '%';
+                }
+
+                if (aiLogs.success) {
+                    document.getElementById('aiQuestionsAsked').textContent = aiLogs.data.length;
+                }
+                
+            } catch (error) {
+                console.error('Error loading profile stats:', error);
+            }
+        }
+
+        async function loadActivityData() {
+            try {
+                const activityList = document.getElementById('activityList');
+                activityList.innerHTML = '<div class="loading-spinner">Loading activity...</div>';
+                
+                // Load recent activity from various sources
+                const [courses, quizzes, aiLogs] = await Promise.all([
+                    api.get('/api/courses/'),
+                    api.get('/api/quizzes/history'),
+                    api.get('/api/ai/logs')
+                ]);
+
+                let activities = [];
+                
+                if (courses.success) {
+                    courses.data.forEach(course => {
+                        activities.push({
+                            type: 'course',
+                            title: `Started course: ${course.title}`,
+                            date: course.last_accessed_at || course.created_at,
+                            icon: '📚'
+                        });
+                    });
+                }
+
+                if (quizzes.success) {
+                    quizzes.data.forEach(quiz => {
+                        activities.push({
+                            type: 'quiz',
+                            title: `Completed quiz: ${quiz.title}`,
+                            date: quiz.submitted_at,
+                            icon: '📝'
+                        });
+                    });
+                }
+
+                if (aiLogs.success) {
+                    aiLogs.data.forEach(log => {
+                        activities.push({
+                            type: 'ai',
+                            title: `Asked AI question`,
+                            date: log.created_at,
+                            icon: '🤖'
+                        });
+                    });
+                }
+
+                // Sort by date and take recent 10
+                activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+                activities = activities.slice(0, 10);
+
+                if (activities.length > 0) {
+                    activityList.innerHTML = activities.map(activity => `
+                        <div class="activity-item">
+                            <div class="activity-icon">${activity.icon}</div>
+                            <div class="activity-content">
+                                <div class="activity-title">${activity.title}</div>
+                                <div class="activity-date">${new Date(activity.date).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    activityList.innerHTML = '<p class="text-muted">No recent activity</p>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading activity data:', error);
+                document.getElementById('activityList').innerHTML = '<p class="text-muted">Error loading activity</p>';
+            }
+        }
+    </script>
+</body>
+</html>
+
