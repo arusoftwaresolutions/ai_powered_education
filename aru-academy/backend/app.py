@@ -258,19 +258,19 @@ def recreate_approved_users_table():
             print("   - new.student@example.com (student) for all departments")
             print("   - new.instructor@example.com (instructor) for all departments")
             print("✅ Approved users created/verified.")
-        
-    except IntegrityError as e:
-        db.session.rollback()
-        if "Duplicate entry" in str(e):
-            print("⚠️  Duplicate entry detected - approved users may already exist. Skipping creation.")
-            print("✅ Approved users verification completed.")
-        else:
-            print(f"❌ Database integrity error creating approved users: {e}")
+            
+        except IntegrityError as e:
+            db.session.rollback()
+            if "Duplicate entry" in str(e):
+                print("⚠️  Duplicate entry detected - approved users may already exist. Skipping creation.")
+                print("✅ Approved users verification completed.")
+            else:
+                print(f"❌ Database integrity error creating approved users: {e}")
+                raise e
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Error creating approved users: {e}")
             raise e
-    except Exception as e:
-        db.session.rollback()
-        print(f"❌ Error creating approved users: {e}")
-        raise e
 
 def seed_database_if_empty():
     """Seed database with initial data if it's empty"""
