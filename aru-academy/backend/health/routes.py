@@ -291,10 +291,13 @@ def test_huggingface():
         }
         
         payload = {
-            "inputs": "What is 2+2?",
+            "inputs": "Question: What is 2+2?\nAnswer:",
             "parameters": {
                 "max_new_tokens": 50,
-                "temperature": 0.7
+                "temperature": 0.8,
+                "top_p": 0.9,
+                "do_sample": True,
+                "pad_token_id": 50256
             }
         }
         

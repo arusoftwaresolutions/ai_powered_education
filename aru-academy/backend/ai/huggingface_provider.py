@@ -20,10 +20,10 @@ class HuggingFaceProvider:
         
         # Fallback models to try if the primary one fails
         self.fallback_models = [
-            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-large",
-            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
             "https://api-inference.huggingface.co/models/gpt2",
-            "https://api-inference.huggingface.co/models/distilgpt2"
+            "https://api-inference.huggingface.co/models/distilgpt2",
+            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
+            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-large"
         ]
     
     def ask_question(self, question: str, context: str = "") -> Tuple[bool, str, float]:
@@ -42,19 +42,20 @@ class HuggingFaceProvider:
         # Try up to 2 times for better reliability
         for attempt in range(2):
             try:
-                # Prepare prompt with context
+                # Prepare prompt with context (optimized for GPT-2)
                 if context:
-                    prompt = f"Context: {context}\n\nQuestion: {question}\n\nAnswer:"
+                    prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
                 else:
-                    prompt = f"Question: {question}\n\nAnswer:"
+                    prompt = f"Question: {question}\nAnswer:"
                 
                 payload = {
                     "inputs": prompt,
                     "parameters": {
-                        "max_new_tokens": 500,
-                        "temperature": 0.7,
+                        "max_new_tokens": 200,
+                        "temperature": 0.8,
                         "top_p": 0.9,
-                        "do_sample": True
+                        "do_sample": True,
+                        "pad_token_id": 50256
                     }
                 }
                 
@@ -152,19 +153,20 @@ class HuggingFaceProvider:
             print(f"🔧 HF Debug - Trying fallback model {i + 1}/{len(self.fallback_models)}: {fallback_url}")
             
             try:
-                # Prepare prompt with context
+                # Prepare prompt with context (optimized for GPT-2)
                 if context:
-                    prompt = f"Context: {context}\n\nQuestion: {question}\n\nAnswer:"
+                    prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
                 else:
-                    prompt = f"Question: {question}\n\nAnswer:"
+                    prompt = f"Question: {question}\nAnswer:"
                 
                 payload = {
                     "inputs": prompt,
                     "parameters": {
-                        "max_new_tokens": 500,
-                        "temperature": 0.7,
+                        "max_new_tokens": 200,
+                        "temperature": 0.8,
                         "top_p": 0.9,
-                        "do_sample": True
+                        "do_sample": True,
+                        "pad_token_id": 50256
                     }
                 }
                 

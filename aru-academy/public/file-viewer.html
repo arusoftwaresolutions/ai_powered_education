@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Viewer - ARU Academy</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        .file-viewer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .file-viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+        
+        .file-meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .file-content {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .file-content iframe {
+            width: 100%;
+            height: 70vh;
+            border: none;
+        }
+        
+        .text-content {
+            padding: 20px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+        
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+        
+        .error-message {
+            padding: 20px;
+            text-align: center;
+            color: var(--error-color);
+            background: var(--error-bg);
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .unsupported-file {
+            padding: 40px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        .unsupported-file .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .download-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s;
+        }
+        
+        .download-btn:hover {
+            background: var(--primary-hover);
+        }
+        
+        .back-btn {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: var(--secondary-hover);
+        }
+        
+        .file-type-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: var(--accent-color);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="file-viewer-container">
+        <div class="file-viewer-header">
+            <div class="file-info">
+                <h1 class="file-title" id="fileTitle">Loading...</h1>
+                <div class="file-meta">
+                    <span class="file-type-badge" id="fileType">PDF</span>
+                    <span id="fileSize">• Loading...</span>
+                    <span id="fileDate">• Loading...</span>
+                </div>
+            </div>
+            <div class="file-actions">
+                <button class="back-btn" onclick="goBack()">
+                    ← Back to Course
+                </button>
+                <a href="#" class="download-btn" id="downloadBtn" style="display: none;">
+                    📥 Download
+                </a>
+            </div>
+        </div>
+        
+        <div class="file-content">
+            <div class="loading-spinner" id="loadingSpinner">
+                <div>Loading file content...</div>
+            </div>
+            <div id="fileContent" style="display: none;"></div>
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        let currentResource = null;
+        
+        // Get resource ID from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const resourceId = urlParams.get('id');
+        const courseId = urlParams.get('course_id');
+        
+        if (!resourceId) {
+            showError('No resource ID provided');
+        } else {
+            loadResource(resourceId);
+        }
+        
+        async function loadResource(resourceId) {
+            try {
+                const response = await api.get(`/api/resources/${resourceId}`);
+                
+                if (response.success) {
+                    currentResource = response.resource;
+                    displayResource(currentResource);
+                } else {
+                    showError(response.message || 'Failed to load resource');
+                }
+            } catch (error) {
+                console.error('Error loading resource:', error);
+                showError('An error occurred while loading the resource');
+            }
+        }
+        
+        function displayResource(resource) {
+            // Update header
+            document.getElementById('fileTitle').textContent = resource.title;
+            document.getElementById('fileType').textContent = resource.type.toUpperCase();
+            document.getElementById('fileSize').textContent = `• ${formatFileSize(resource.file_size || 0)}`;
+            document.getElementById('fileDate').textContent = `• ${formatDate(resource.created_at)}`;
+            
+            // Setup download button
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (resource.file_path) {
+                downloadBtn.href = `/api/resources/${resource.id}/download`;
+                downloadBtn.style.display = 'inline-flex';
+            }
+            
+            // Hide loading spinner
+            document.getElementById('loadingSpinner').style.display = 'none';
+            
+            // Display content based on file type
+            const contentDiv = document.getElementById('fileContent');
+            contentDiv.style.display = 'block';
+            
+            switch (resource.type.toLowerCase()) {
+                case 'pdf':
+                    displayPDF(resource, contentDiv);
+                    break;
+                case 'text':
+                    displayText(resource, contentDiv);
+                    break;
+                case 'video':
+                    displayVideo(resource, contentDiv);
+                    break;
+                case 'document':
+                    displayDocument(resource, contentDiv);
+                    break;
+                default:
+                    displayUnsupported(resource, contentDiv);
+            }
+        }
+        
+        function displayPDF(resource, container) {
+            if (resource.file_path) {
+                container.innerHTML = `
+                    <iframe src="/api/resources/${resource.id}/view" 
+                            type="application/pdf" 
+                            width="100%" 
+                            height="70vh">
+                        <p>Your browser does not support PDFs. 
+                           <a href="/api/resources/${resource.id}/download">Download the PDF</a>
+                        </p>
+                    </iframe>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="unsupported-file">
+                        <div class="icon">📄</div>
+                        <h3>PDF Content Not Available</h3>
+                        <p>This PDF file is not available for viewing.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayText(resource, container) {
+            if (resource.content) {
+                container.innerHTML = `
+                    <div class="text-content">
+                        ${resource.content.replace(/\n/g, '<br>')}
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="unsupported-file">
+                        <div class="icon">📝</div>
+                        <h3>Text Content Not Available</h3>
+                        <p>This text content is not available for viewing.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayVideo(resource, container) {
+            if (resource.file_path) {
+                container.innerHTML = `
+                    <video controls width="100%" height="70vh">
+                        <source src="/api/resources/${resource.id}/view" type="video/mp4">
+                        <source src="/api/resources/${resource.id}/view" type="video/avi">
+                        <source src="/api/resources/${resource.id}/view" type="video/mov">
+                        Your browser does not support the video tag.
+                    </video>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="unsupported-file">
+                        <div class="icon">🎥</div>
+                        <h3>Video Content Not Available</h3>
+                        <p>This video file is not available for viewing.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayDocument(resource, container) {
+            container.innerHTML = `
+                <div class="unsupported-file">
+                    <div class="icon">📄</div>
+                    <h3>Document Viewer</h3>
+                    <p>Document viewing is not supported in the browser.</p>
+                    <p>Please download the file to view it.</p>
+                    <a href="/api/resources/${resource.id}/download" class="download-btn">
+                        📥 Download Document
+                    </a>
+                </div>
+            `;
+        }
+        
+        function displayUnsupported(resource, container) {
+            container.innerHTML = `
+                <div class="unsupported-file">
+                    <div class="icon">📁</div>
+                    <h3>Unsupported File Type</h3>
+                    <p>This file type (${resource.type}) is not supported for viewing.</p>
+                    <p>Please download the file to view it.</p>
+                    <a href="/api/resources/${resource.id}/download" class="download-btn">
+                        📥 Download File
+                    </a>
+                </div>
+            `;
+        }
+        
+        function showError(message) {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+        
+        function goBack() {
+            if (courseId) {
+                window.location.href = `course_detail.html?id=${courseId}`;
+            } else {
+                window.location.href = 'courses.html';
+            }
+        }
+    </script>
+</body>
+</html>

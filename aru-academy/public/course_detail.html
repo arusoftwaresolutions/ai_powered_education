@@ -557,8 +557,11 @@
             if (userRole === 'Student') {
                 if (resource.type === 'LINK') {
                     return `<a href="${resource.file_path_or_url}" target="_blank" class="btn btn-primary btn-sm">Open Link</a>`;
-                } else if (resource.type === 'TEXT') {
-                    return `<button class="btn btn-primary btn-sm" onclick="viewTextResource('${resource.id}')">View Text</button>`;
+                } else if (['TEXT', 'PDF', 'VIDEO', 'DOCUMENT'].includes(resource.type)) {
+                    return `
+                        <button class="btn btn-primary btn-sm" onclick="viewTextResource('${resource.id}')">View</button>
+                        <button class="btn btn-outline btn-sm" onclick="downloadResource('${resource.id}')">Download</button>
+                    `;
                 } else {
                     return `<button class="btn btn-primary btn-sm" onclick="downloadResource('${resource.id}')">Download</button>`;
                 }
@@ -672,8 +675,9 @@
 
         // Resource actions for students
         function viewTextResource(resourceId) {
-            // This would show a modal with the text content
-            showAlert('Text resource viewer coming soon!', 'info');
+            // Open file viewer for the resource
+            const courseId = new URLSearchParams(window.location.search).get('id');
+            window.open(`file-viewer.html?id=${resourceId}&course_id=${courseId}`, '_blank');
         }
 
         async function downloadResource(resourceId) {

@@ -289,3 +289,63 @@ def update_progress(resource_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@resources_bp.route('/<int:resource_id>/view', methods=['GET'])
+@jwt_required()
+def view_resource(resource_id):
+    """View a resource file (for file viewer)"""
+    try:
+        user_id = int(get_jwt_identity())
+        user = User.query.get(int(user_id))
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        resource = resource_service.get_resource_by_id(user, resource_id)
+        if not resource:
+            return jsonify({'error': 'Resource not found'}), 404
+        
+        # Check if file exists
+        if not resource.file_path or not os.path.exists(resource.file_path):
+            return jsonify({'error': 'File not found'}), 404
+        
+        # Update progress if student
+        if user.role == UserRole.STUDENT:
+            resource_service.update_progress(user.id, resource_id, 'in_progress', 50)
+        
+        # Return file content
+        from flask import send_file
+        return send_file(resource.file_path, as_attachment=False)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@resources_bp.route('/<int:resource_id>/download', methods=['GET'])
+@jwt_required()
+def download_resource(resource_id):
+    """Download a resource file"""
+    try:
+        user_id = int(get_jwt_identity())
+        user = User.query.get(int(user_id))
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        resource = resource_service.get_resource_by_id(user, resource_id)
+        if not resource:
+            return jsonify({'error': 'Resource not found'}), 404
+        
+        # Check if file exists
+        if not resource.file_path or not os.path.exists(resource.file_path):
+            return jsonify({'error': 'File not found'}), 404
+        
+        # Update progress if student
+        if user.role == UserRole.STUDENT:
+            resource_service.update_progress(user.id, resource_id, 'completed', 100)
+        
+        # Return file for download
+        from flask import send_file
+        return send_file(resource.file_path, as_attachment=True, download_name=resource.title)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
