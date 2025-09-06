@@ -296,26 +296,34 @@ def seed_database_if_empty():
         # Always create approved users first (independent of other data)
         create_approved_users()
         
-        # Force recreation of courses and resources (for new content)
-        print("🔄 Force recreating courses and resources with new content...")
-        
-        # Delete existing resources first (to avoid foreign key constraints)
+        # Check if we need to seed courses and resources
         from models.resource import Resource
-        existing_resources = Resource.query.all()
-        for resource in existing_resources:
-            db.session.delete(resource)
-        print(f"🗑️  Deleted {len(existing_resources)} existing resources")
-        
-        # Delete existing courses
         existing_courses = Course.query.all()
-        for course in existing_courses:
-            db.session.delete(course)
-        print(f"🗑️  Deleted {len(existing_courses)} existing courses")
+        existing_resources = Resource.query.all()
         
-        db.session.commit()
-        print("✅ Cleared existing courses and resources")
-        
-        print("🌱 Database is empty. Starting full seeding process...")
+        # Only seed if we have no courses or no resources
+        if not existing_courses or not existing_resources:
+            if existing_courses and not existing_resources:
+                print("🔄 Found courses without content, adding resources...")
+            elif not existing_courses:
+                print("🌱 No courses found, starting full seeding process...")
+                
+                # Delete existing resources first (to avoid foreign key constraints)
+                for resource in existing_resources:
+                    db.session.delete(resource)
+                print(f"🗑️  Deleted {len(existing_resources)} existing resources")
+                
+                # Delete existing courses
+                for course in existing_courses:
+                    db.session.delete(course)
+                print(f"🗑️  Deleted {len(existing_courses)} existing courses")
+                
+                db.session.commit()
+                print("✅ Cleared existing courses and resources")
+        else:
+            print("✅ Courses with content already exist, skipping seeding")
+            print(f"📊 Found {len(existing_courses)} courses with {len(existing_resources)} resources")
+            return
         
         # Create departments (check for duplicates)
         departments_data = [
@@ -801,38 +809,40 @@ def seed_database_if_empty():
         raise
 
 def force_seed_database():
-    """Force seed database with new content (deletes existing courses/resources)"""
+    """Force seed database with new content (only if courses are empty or missing content)"""
     try:
-        print("🔄 FORCE SEEDING: Recreating all courses and resources...")
-        
-        from models.department import Department
-        from models.user import User, UserRole, UserStatus
-        from models.approved_user import ApprovedUser
         from models.course import Course
         from models.resource import Resource
-        from datetime import datetime
         
-        # Always create approved users first (independent of other data)
-        create_approved_users()
-        
-        # Delete existing resources first (to avoid foreign key constraints)
-        existing_resources = Resource.query.all()
-        for resource in existing_resources:
-            db.session.delete(resource)
-        print(f"🗑️  Deleted {len(existing_resources)} existing resources")
-        
-        # Delete existing courses
+        # Check if we already have courses with content
         existing_courses = Course.query.all()
-        for course in existing_courses:
-            db.session.delete(course)
-        print(f"🗑️  Deleted {len(existing_courses)} existing courses")
+        existing_resources = Resource.query.all()
         
-        db.session.commit()
-        print("✅ Cleared existing courses and resources")
-        
-        # Now run the full seeding process
-        print("🌱 Starting full seeding process with new content...")
-        seed_database_if_empty()
+        # Only force recreate if we have empty courses (no resources) or no courses at all
+        if not existing_courses:
+            print("🔄 No courses found, seeding fresh...")
+            seed_database_if_empty()
+        elif existing_courses and not existing_resources:
+            print("🔄 Found courses without content, force recreating...")
+            
+            # Delete existing resources first (to avoid foreign key constraints)
+            for resource in existing_resources:
+                db.session.delete(resource)
+            print(f"🗑️  Deleted {len(existing_resources)} existing resources")
+            
+            # Delete existing courses
+            for course in existing_courses:
+                db.session.delete(course)
+            print(f"🗑️  Deleted {len(existing_courses)} existing courses")
+            
+            db.session.commit()
+            print("✅ Cleared existing courses and resources")
+            
+            # Now seed with new content
+            seed_database_if_empty()
+        else:
+            print("✅ Courses with content already exist, skipping force seeding")
+            print(f"📊 Found {len(existing_courses)} courses with {len(existing_resources)} resources")
         
         print("🎉 FORCE SEEDING completed successfully!")
         

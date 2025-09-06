@@ -187,10 +187,10 @@ def force_seed_database():
     Force seed the database with new content (deletes existing courses/resources)
     """
     try:
-        from app import force_seed_database
+        from app import force_seed_database as app_force_seed
         
         # Run force seeding
-        force_seed_database()
+        app_force_seed()
         
         return success_response(
             message="Force database seeding completed successfully! All courses and resources have been recreated with new content."
