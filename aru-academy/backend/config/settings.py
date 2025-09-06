@@ -20,11 +20,17 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
-        'pool_recycle': 300,
-        'pool_timeout': 20,
-        'pool_size': 10,
-        'max_overflow': 20,
+        'pool_recycle': 180,  # Recycle connections every 3 minutes
+        'pool_timeout': 10,   # Reduced timeout
+        'pool_size': 5,       # Reduced pool size
+        'max_overflow': 10,   # Reduced overflow
         'pool_reset_on_return': 'commit',
+        'connect_args': {
+            'connect_timeout': 10,
+            'read_timeout': 10,
+            'write_timeout': 10,
+            'autocommit': True
+        }
     }
     
     # JWT settings - Use headers only for cross-domain compatibility
@@ -41,7 +47,7 @@ class Config:
     UPLOAD_FOLDER = 'storage/departments'
     
     # Hugging Face settings
-    HF_API_URL = os.getenv('HF_API_URL', 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium')
+    HF_API_URL = os.getenv('HF_API_URL', 'https://api-inference.huggingface.co/models/distilgpt2')
     HF_API_TOKEN = os.getenv('HF_API_TOKEN')
     
     # Rate limiting

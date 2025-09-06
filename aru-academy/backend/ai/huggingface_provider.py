@@ -18,12 +18,12 @@ class HuggingFaceProvider:
             "Content-Type": "application/json"
         }
         
-        # Fallback models to try if the primary one fails (prioritizing more reliable models)
+        # Fallback models to try if the primary one fails (prioritizing faster, more reliable models)
         self.fallback_models = [
-            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
-            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-small",
-            "https://api-inference.huggingface.co/models/gpt2",
-            "https://api-inference.huggingface.co/models/distilgpt2"
+            "https://api-inference.huggingface.co/models/distilgpt2",  # Fastest and most reliable
+            "https://api-inference.huggingface.co/models/gpt2",  # Fast and reliable
+            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-small",  # Conversational but slower
+            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium"  # Best quality but slowest
         ]
     
     def ask_question(self, question: str, context: str = "") -> Tuple[bool, str, float]:
@@ -68,7 +68,7 @@ class HuggingFaceProvider:
                     self.api_url,
                     headers=self.headers,
                     json=payload,
-                    timeout=30
+                    timeout=15  # Reduced timeout to 15 seconds
                 )
                 
                 print(f"🔧 HF Debug - Response status: {response.status_code}")
@@ -179,7 +179,7 @@ class HuggingFaceProvider:
                     fallback_url,
                     headers=self.headers,
                     json=payload,
-                    timeout=30
+                    timeout=15  # Reduced timeout to 15 seconds
                 )
                 
                 print(f"🔧 HF Debug - Fallback model {i + 1} response status: {response.status_code}")
@@ -275,7 +275,7 @@ class HuggingFaceProvider:
                 self.api_url,
                 headers=self.headers,
                 json=payload,
-                timeout=45
+                timeout=15  # Reduced timeout to 15 seconds
             )
             
             processing_time = time.time() - start_time
