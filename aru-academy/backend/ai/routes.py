@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 import time
+import os
 
 from .huggingface_provider import HuggingFaceProvider
 from models.base import db
@@ -214,6 +215,8 @@ def ask_question():
             print(f"🔧 Debug - API Token configured: {bool(api_token)}")
             print(f"🔧 Debug - API URL: {api_url}")
             print(f"🔧 Debug - API Token (first 10 chars): {api_token[:10] if api_token else 'None'}...")
+            print(f"🔧 Debug - Environment check: HF_API_TOKEN exists = {bool(os.getenv('HF_API_TOKEN'))}")
+            print(f"🔧 Debug - Token length: {len(api_token) if api_token else 0}")
             
             if not api_token:
                 print("⚠️  HuggingFace API token not configured, using enhanced fallback response")
@@ -553,8 +556,26 @@ def test_ai():
     try:
         user_id = int(get_jwt_identity())
         
+        # Check if API token is configured
+        api_token = current_app.config.get('HF_API_TOKEN')
+        api_url = current_app.config.get('HF_API_URL')
+        
+        print(f"🧪 AI Test - API Token configured: {bool(api_token)}")
+        print(f"🧪 AI Test - API URL: {api_url}")
+        print(f"🧪 AI Test - API Token (first 10 chars): {api_token[:10] if api_token else 'None'}...")
+        
         # Test with a simple question
         test_question = "What is 2+2?"
+        
+        if not api_token:
+            return jsonify({
+                'success': False,
+                'error': 'HuggingFace API token not configured',
+                'test_question': test_question,
+                'api_configured': False,
+                'api_url': api_url,
+                'message': 'Please configure HF_API_TOKEN environment variable'
+            }), 400
         
         try:
             hf_provider = get_hf_provider()
@@ -589,6 +610,12 @@ def ai_status():
         api_token = current_app.config.get('HF_API_TOKEN')
         api_url = current_app.config.get('HF_API_URL', 'Not configured')
         
+        # Enhanced debugging for environment variables
+        env_token = os.getenv('HF_API_TOKEN')
+        print(f"🔧 AI Status - Environment HF_API_TOKEN exists: {bool(env_token)}")
+        print(f"🔧 AI Status - Config HF_API_TOKEN exists: {bool(api_token)}")
+        print(f"🔧 AI Status - Token lengths - Env: {len(env_token) if env_token else 0}, Config: {len(api_token) if api_token else 0}")
+        
         if not api_token:
             return jsonify({
                 'status': 'fallback',
@@ -596,7 +623,13 @@ def ai_status():
                 'service': 'Hugging Face Inference API',
                 'model': api_url.split('/')[-1] if '/' in api_url else api_url,
                 'fallback_available': True,
-                'message': 'AI service is running with helpful fallback responses'
+                'message': 'AI service is running with helpful fallback responses',
+                'debug': {
+                    'env_token_exists': bool(env_token),
+                    'config_token_exists': bool(api_token),
+                    'api_url': api_url,
+                    'token_length': len(api_token) if api_token else 0
+                }
             }), 200
         
         # Test the AI service

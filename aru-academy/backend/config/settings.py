@@ -21,6 +21,10 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
+        'pool_timeout': 20,
+        'pool_size': 10,
+        'max_overflow': 20,
+        'pool_reset_on_return': 'commit',
     }
     
     # JWT settings - Use headers only for cross-domain compatibility
@@ -37,7 +41,7 @@ class Config:
     UPLOAD_FOLDER = 'storage/departments'
     
     # Hugging Face settings
-    HF_API_URL = os.getenv('HF_API_URL', 'https://api-inference.huggingface.co/models/gpt2')
+    HF_API_URL = os.getenv('HF_API_URL', 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium')
     HF_API_TOKEN = os.getenv('HF_API_TOKEN')
     
     # Rate limiting

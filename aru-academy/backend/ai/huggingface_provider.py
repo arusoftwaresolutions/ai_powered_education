@@ -18,12 +18,12 @@ class HuggingFaceProvider:
             "Content-Type": "application/json"
         }
         
-        # Fallback models to try if the primary one fails
+        # Fallback models to try if the primary one fails (prioritizing more reliable models)
         self.fallback_models = [
-            "https://api-inference.huggingface.co/models/gpt2",
-            "https://api-inference.huggingface.co/models/distilgpt2",
             "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
-            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-large"
+            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-small",
+            "https://api-inference.huggingface.co/models/gpt2",
+            "https://api-inference.huggingface.co/models/distilgpt2"
         ]
     
     def ask_question(self, question: str, context: str = "") -> Tuple[bool, str, float]:
@@ -42,20 +42,20 @@ class HuggingFaceProvider:
         # Try up to 2 times for better reliability
         for attempt in range(2):
             try:
-                # Prepare prompt with context (optimized for GPT-2)
+                # Prepare prompt with context (optimized for DialoGPT)
                 if context:
-                    prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
+                    prompt = f"Context: {context}\n\nHuman: {question}\n\nAssistant:"
                 else:
-                    prompt = f"Question: {question}\nAnswer:"
+                    prompt = f"Human: {question}\n\nAssistant:"
                 
                 payload = {
                     "inputs": prompt,
                     "parameters": {
-                        "max_new_tokens": 200,
-                        "temperature": 0.8,
+                        "max_new_tokens": 150,
+                        "temperature": 0.7,
                         "top_p": 0.9,
                         "do_sample": True,
-                        "pad_token_id": 50256
+                        "repetition_penalty": 1.1
                     }
                 }
                 
@@ -82,9 +82,14 @@ class HuggingFaceProvider:
                     if isinstance(result, list) and len(result) > 0:
                         answer = result[0].get('generated_text', '')
                         print(f"🔧 HF Debug - Generated text: {answer[:200]}...")
-                        # Extract only the answer part
-                        if 'Answer:' in answer:
-                            answer = answer.split('Answer:')[-1].strip()
+                        # Extract only the assistant response part
+                        if 'Assistant:' in answer:
+                            answer = answer.split('Assistant:')[-1].strip()
+                        elif 'Human:' in answer:
+                            # If it includes the human part, extract everything after the last Human:
+                            parts = answer.split('Human:')
+                            if len(parts) > 1:
+                                answer = parts[-1].strip()
                         print(f"🔧 HF Debug - Final answer: {answer[:200]}...")
                         return True, answer, processing_time
                     else:
@@ -153,20 +158,20 @@ class HuggingFaceProvider:
             print(f"🔧 HF Debug - Trying fallback model {i + 1}/{len(self.fallback_models)}: {fallback_url}")
             
             try:
-                # Prepare prompt with context (optimized for GPT-2)
+                # Prepare prompt with context (optimized for DialoGPT)
                 if context:
-                    prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
+                    prompt = f"Context: {context}\n\nHuman: {question}\n\nAssistant:"
                 else:
-                    prompt = f"Question: {question}\nAnswer:"
+                    prompt = f"Human: {question}\n\nAssistant:"
                 
                 payload = {
                     "inputs": prompt,
                     "parameters": {
-                        "max_new_tokens": 200,
-                        "temperature": 0.8,
+                        "max_new_tokens": 150,
+                        "temperature": 0.7,
                         "top_p": 0.9,
                         "do_sample": True,
-                        "pad_token_id": 50256
+                        "repetition_penalty": 1.1
                     }
                 }
                 
@@ -183,9 +188,14 @@ class HuggingFaceProvider:
                     result = response.json()
                     if isinstance(result, list) and len(result) > 0:
                         answer = result[0].get('generated_text', '')
-                        # Extract only the answer part
-                        if 'Answer:' in answer:
-                            answer = answer.split('Answer:')[-1].strip()
+                        # Extract only the assistant response part
+                        if 'Assistant:' in answer:
+                            answer = answer.split('Assistant:')[-1].strip()
+                        elif 'Human:' in answer:
+                            # If it includes the human part, extract everything after the last Human:
+                            parts = answer.split('Human:')
+                            if len(parts) > 1:
+                                answer = parts[-1].strip()
                         processing_time = time.time() - start_time
                         print(f"✅ HF Success with fallback model {i + 1}: {fallback_url}")
                         return True, answer, processing_time

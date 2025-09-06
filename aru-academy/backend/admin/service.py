@@ -15,41 +15,48 @@ class AdminService:
     
     def get_dashboard_stats(self) -> Dict:
         """Get dashboard statistics"""
-        total_users = User.query.count()
-        total_courses = Course.query.count()
-        total_resources = Resource.query.count()
-        total_quizzes = Quiz.query.count()
-        
-        # Active users (users with ACTIVE status)
-        active_users = User.query.filter(User.status == UserStatus.ACTIVE).count()
-        
-        # Recent activity (last 30 days)
-        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-        recent_courses = Course.query.filter(Course.created_at >= thirty_days_ago).count()
-        recent_resources = Resource.query.filter(Resource.created_at >= thirty_days_ago).count()
-        
-        # AI usage
-        total_ai_calls = AiCallLog.query.count()
-        successful_ai_calls = AiCallLog.query.filter_by(success=True).count()
-        ai_success_rate = (successful_ai_calls / total_ai_calls * 100) if total_ai_calls > 0 else 0
-        
-        return {
-            'total_users': total_users,
-            'pending_users': User.query.filter(User.status == UserStatus.PENDING).count(),
-            'total_courses': total_courses,
-            'total_resources': total_resources,
-            'total_quizzes': total_quizzes,
-            'active_users': active_users,
-            'recent_courses': recent_courses,
-            'recent_resources': recent_resources,
-            'total_ai_calls': total_ai_calls,
-            'ai_success_rate': round(ai_success_rate, 2),
-            # Role breakdowns
-            'students': User.query.filter(User.role == UserRole.STUDENT).count(),
-            'instructors': User.query.filter(User.role == UserRole.INSTRUCTOR).count(),
-            'admins': User.query.filter(User.role == UserRole.ADMIN).count(),
-            'active_courses': Course.query.filter(Course.status == 'active').count() if hasattr(Course, 'status') else total_courses
-        }
+        try:
+            # Use fresh session for all queries
+            db.session.rollback()  # Clear any existing transactions
+            
+            total_users = User.query.count()
+            total_courses = Course.query.count()
+            total_resources = Resource.query.count()
+            total_quizzes = Quiz.query.count()
+            
+            # Active users (users with ACTIVE status)
+            active_users = User.query.filter(User.status == UserStatus.ACTIVE).count()
+            
+            # Recent activity (last 30 days)
+            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+            recent_courses = Course.query.filter(Course.created_at >= thirty_days_ago).count()
+            recent_resources = Resource.query.filter(Resource.created_at >= thirty_days_ago).count()
+            
+            # AI usage
+            total_ai_calls = AiCallLog.query.count()
+            successful_ai_calls = AiCallLog.query.filter_by(success=True).count()
+            ai_success_rate = (successful_ai_calls / total_ai_calls * 100) if total_ai_calls > 0 else 0
+            
+            return {
+                'total_users': total_users,
+                'pending_users': User.query.filter(User.status == UserStatus.PENDING).count(),
+                'total_courses': total_courses,
+                'total_resources': total_resources,
+                'total_quizzes': total_quizzes,
+                'active_users': active_users,
+                'recent_courses': recent_courses,
+                'recent_resources': recent_resources,
+                'total_ai_calls': total_ai_calls,
+                'ai_success_rate': round(ai_success_rate, 2),
+                # Role breakdowns
+                'students': User.query.filter(User.role == UserRole.STUDENT).count(),
+                'instructors': User.query.filter(User.role == UserRole.INSTRUCTOR).count(),
+                'admins': User.query.filter(User.role == UserRole.ADMIN).count(),
+                'active_courses': Course.query.filter(Course.status == 'active').count() if hasattr(Course, 'status') else total_courses
+            }
+        except Exception as e:
+            db.session.rollback()
+            raise e
     
     def get_users(self, search: Optional[str] = None, role: Optional[str] = None, department_id: Optional[int] = None, status: Optional[str] = None) -> List[User]:
         """Get users with optional filtering"""

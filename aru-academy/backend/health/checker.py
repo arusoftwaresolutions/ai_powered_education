@@ -43,22 +43,46 @@ class HealthChecker:
         """Check database connectivity and performance"""
         try:
             start_time = time.time()
+            
+            # Clear any existing transactions and start fresh
+            db.session.rollback()
+            
             # Test database connection
             db.session.execute('SELECT 1')
             db.session.commit()
             response_time = time.time() - start_time
             
-            # Get comprehensive stats
+            # Get comprehensive stats with fresh session
             from models.department import Department
             from models.course import Course
             from models.resource import Resource
             from models.approved_user import ApprovedUser
             
-            user_count = User.query.count()
-            dept_count = Department.query.count()
-            course_count = Course.query.count()
-            resource_count = Resource.query.count()
-            approved_user_count = ApprovedUser.query.count()
+            # Use individual try-catch for each query to avoid cascading failures
+            try:
+                user_count = User.query.count()
+            except Exception:
+                user_count = 0
+                
+            try:
+                dept_count = Department.query.count()
+            except Exception:
+                dept_count = 0
+                
+            try:
+                course_count = Course.query.count()
+            except Exception:
+                course_count = 0
+                
+            try:
+                resource_count = Resource.query.count()
+            except Exception:
+                resource_count = 0
+                
+            try:
+                approved_user_count = ApprovedUser.query.count()
+            except Exception:
+                approved_user_count = 0
             
             # Determine seeding status
             seeding_status = 'completed' if dept_count > 0 and course_count > 0 else 'pending'
@@ -78,6 +102,7 @@ class HealthChecker:
             }
         except Exception as e:
             logger.error(f"Database health check failed: {str(e)}")
+            db.session.rollback()  # Ensure clean state
             return {
                 'status': 'unhealthy',
                 'error': str(e),

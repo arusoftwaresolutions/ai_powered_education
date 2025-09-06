@@ -22,13 +22,20 @@ def require_admin(f):
     """Decorator to require admin role"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        user_id = int(get_jwt_identity())
-        user = User.query.get(int(user_id))
-        
-        if not user or user.role != UserRole.ADMIN:
-            return jsonify({'error': 'Admin access required'}), 403
-        
-        return f(*args, **kwargs)
+        try:
+            user_id = int(get_jwt_identity())
+            
+            # Use a fresh session for the query
+            from models.base import db
+            user = db.session.get(User, user_id)
+            
+            if not user or user.role != UserRole.ADMIN:
+                return jsonify({'error': 'Admin access required'}), 403
+            
+            return f(*args, **kwargs)
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': f'Authentication error: {str(e)}'}), 500
     return decorated_function
 
 @admin_bp.route('/dashboard', methods=['GET'])
