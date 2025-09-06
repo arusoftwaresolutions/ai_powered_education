@@ -208,22 +208,33 @@ def ask_question():
         # Get AI response
         try:
             # Check if API token is configured
-            if not current_app.config.get('HF_API_TOKEN'):
+            api_token = current_app.config.get('HF_API_TOKEN')
+            api_url = current_app.config.get('HF_API_URL')
+            
+            print(f"🔧 Debug - API Token configured: {bool(api_token)}")
+            print(f"🔧 Debug - API URL: {api_url}")
+            
+            if not api_token:
                 print("⚠️  HuggingFace API token not configured, using enhanced fallback response")
                 success = True  # Treat fallback as success
                 answer = get_enhanced_fallback_response(question, context)
                 processing_time = 0.1
             else:
                 hf_provider = get_hf_provider()
+                print(f"🤖 Attempting AI request for: {question[:50]}...")
                 success, answer, processing_time = hf_provider.ask_question(question, context)
                 print(f"🤖 AI Response - Success: {success}, Time: {processing_time:.2f}s")
+                print(f"🤖 AI Response - Answer length: {len(answer) if answer else 0}")
                 
                 # If AI service fails, use enhanced fallback but treat as success
                 if not success:
                     print("⚠️  AI service failed, using enhanced fallback response")
+                    print(f"⚠️  AI Error: {answer}")
                     success = True  # Treat fallback as success
                     answer = get_enhanced_fallback_response(question, context)
                     processing_time = 0.1
+                else:
+                    print(f"✅ AI Success - Real AI response received!")
         except Exception as e:
             print(f"❌ AI Service Error: {e}")
             # Fallback to enhanced responses if AI service is unavailable
@@ -289,24 +300,35 @@ def generate_quiz_questions():
         # Get AI-generated questions
         try:
             # Check if API token is configured
-            if not current_app.config.get('HF_API_TOKEN'):
+            api_token = current_app.config.get('HF_API_TOKEN')
+            api_url = current_app.config.get('HF_API_URL')
+            
+            print(f"🔧 Quiz Debug - API Token configured: {bool(api_token)}")
+            print(f"🔧 Quiz Debug - API URL: {api_url}")
+            print(f"🔧 Quiz Debug - Topic: {topic}, Questions: {num_questions}")
+            
+            if not api_token:
                 print("⚠️  HuggingFace API token not configured, using fallback quiz questions")
                 success = True  # Treat fallback as success
                 questions = get_fallback_quiz_questions(topic, num_questions)
                 processing_time = 0.1
             else:
                 hf_provider = get_hf_provider()
+                print(f"🤖 Attempting AI quiz generation for topic: {topic}")
                 success, questions, processing_time = hf_provider.generate_quiz_questions(
                     topic, context, num_questions
                 )
-                print(f"📝 Quiz Generation - Success: {success}, Questions: {len(questions)}, Time: {processing_time:.2f}s")
+                print(f"📝 Quiz Generation - Success: {success}, Questions: {len(questions) if questions else 0}, Time: {processing_time:.2f}s")
                 
                 # If AI service fails, use fallback but treat as success
                 if not success:
                     print("⚠️  AI service failed, using fallback quiz questions")
+                    print(f"⚠️  AI Error: {questions}")
                     success = True  # Treat fallback as success
                     questions = get_fallback_quiz_questions(topic, num_questions)
                     processing_time = 0.1
+                else:
+                    print(f"✅ AI Quiz Success - Real AI-generated questions received!")
         except Exception as e:
             print(f"❌ Quiz Generation Error: {e}")
             # Fallback to template questions if AI service is unavailable

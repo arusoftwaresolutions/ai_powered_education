@@ -48,13 +48,32 @@ class HealthChecker:
             db.session.commit()
             response_time = time.time() - start_time
             
-            # Get basic stats
+            # Get comprehensive stats
+            from models.department import Department
+            from models.course import Course
+            from models.resource import Resource
+            from models.approved_user import ApprovedUser
+            
             user_count = User.query.count()
+            dept_count = Department.query.count()
+            course_count = Course.query.count()
+            resource_count = Resource.query.count()
+            approved_user_count = ApprovedUser.query.count()
+            
+            # Determine seeding status
+            seeding_status = 'completed' if dept_count > 0 and course_count > 0 else 'pending'
             
             return {
                 'status': 'healthy',
                 'response_time': round(response_time * 1000, 2),  # ms
-                'user_count': user_count,
+                'seeding_status': seeding_status,
+                'counts': {
+                    'users': user_count,
+                    'departments': dept_count,
+                    'courses': course_count,
+                    'resources': resource_count,
+                    'approved_users': approved_user_count
+                },
                 'timestamp': datetime.now().isoformat()
             }
         except Exception as e:
@@ -62,6 +81,7 @@ class HealthChecker:
             return {
                 'status': 'unhealthy',
                 'error': str(e),
+                'seeding_status': 'failed',
                 'timestamp': datetime.now().isoformat()
             }
     

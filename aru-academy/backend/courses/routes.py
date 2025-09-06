@@ -38,6 +38,87 @@ def get_courses():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@courses_bp.route('/ai-tutor', methods=['GET'])
+@jwt_required()
+def get_courses_for_ai_tutor():
+    """Get courses for AI tutor dropdown (simplified data)"""
+    try:
+        user_id = int(get_jwt_identity())
+        user = User.query.get(int(user_id))
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Get courses based on user role
+        if user.role == UserRole.ADMIN:
+            courses = Course.query.all()
+        elif user.role == UserRole.INSTRUCTOR:
+            courses = Course.query.filter_by(created_by=user_id).all()
+        else:  # Student
+            courses = Course.query.filter_by(department_id=user.department_id).all()
+        
+        # Return simplified course data for AI tutor
+        course_data = []
+        for course in courses:
+            course_data.append({
+                'id': course.id,
+                'title': course.title,
+                'code': course.code,
+                'department': course.department.name if course.department else 'Unknown'
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': course_data
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@courses_bp.route('/<int:course_id>/topics', methods=['GET'])
+@jwt_required()
+def get_course_topics(course_id):
+    """Get topics/resources for a specific course"""
+    try:
+        user_id = int(get_jwt_identity())
+        user = User.query.get(int(user_id))
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Check if course exists
+        course = Course.query.get(course_id)
+        if not course:
+            return jsonify({'error': 'Course not found'}), 404
+        
+        # Check if user has access to this course
+        if user.role == UserRole.STUDENT and course.department_id != user.department_id:
+            return jsonify({'error': 'Access denied'}), 403
+        elif user.role == UserRole.INSTRUCTOR and course.created_by != user_id:
+            return jsonify({'error': 'Access denied'}), 403
+        
+        # Get resources/topics for the course
+        from models.resource import Resource
+        resources = Resource.query.filter_by(course_id=course_id).all()
+        
+        # Return simplified topic data
+        topics = []
+        for resource in resources:
+            topics.append({
+                'id': resource.id,
+                'title': resource.title,
+                'type': resource.type.value if resource.type else 'text',
+                'description': resource.description
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': topics
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @courses_bp.route('/<int:course_id>', methods=['GET'])
 @jwt_required()
 def get_course(course_id):

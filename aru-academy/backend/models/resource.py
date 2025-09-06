@@ -19,6 +19,7 @@ class Resource(db.Model, TimestampMixin):
     description = db.Column(db.Text)
     
     # Relationships
+    course = db.relationship('Course', backref='resources', lazy=True)
     progress_list = db.relationship('Progress', lazy=True, cascade='all, delete-orphan')
     
     def __repr__(self):

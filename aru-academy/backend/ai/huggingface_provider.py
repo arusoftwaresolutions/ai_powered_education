@@ -50,6 +50,11 @@ class HuggingFaceProvider:
                     }
                 }
                 
+                print(f"🔧 HF Debug - Attempt {attempt + 1}/2")
+                print(f"🔧 HF Debug - URL: {self.api_url}")
+                print(f"🔧 HF Debug - Headers: {dict(self.headers)}")
+                print(f"🔧 HF Debug - Prompt length: {len(prompt)}")
+                
                 response = requests.post(
                     self.api_url,
                     headers=self.headers,
@@ -57,21 +62,29 @@ class HuggingFaceProvider:
                     timeout=30
                 )
                 
+                print(f"🔧 HF Debug - Response status: {response.status_code}")
+                print(f"🔧 HF Debug - Response headers: {dict(response.headers)}")
+                
                 processing_time = time.time() - start_time
                 
                 if response.status_code == 200:
                     result = response.json()
+                    print(f"🔧 HF Debug - Response JSON: {result}")
                     if isinstance(result, list) and len(result) > 0:
                         answer = result[0].get('generated_text', '')
+                        print(f"🔧 HF Debug - Generated text: {answer[:200]}...")
                         # Extract only the answer part
                         if 'Answer:' in answer:
                             answer = answer.split('Answer:')[-1].strip()
+                        print(f"🔧 HF Debug - Final answer: {answer[:200]}...")
                         return True, answer, processing_time
                     else:
+                        print(f"🔧 HF Debug - Invalid response format: {result}")
                         return False, "AI temporarily unavailable", processing_time
                 
                 elif response.status_code == 503:
                     # Model is loading, this is normal for Hugging Face
+                    print(f"🔧 HF Debug - Model loading (attempt {attempt + 1}/2)")
                     logger.info(f"Hugging Face model is loading (attempt {attempt + 1}/2)")
                     if attempt == 1:  # Last attempt
                         return False, "AI model is loading, please try again in a moment", processing_time
@@ -80,6 +93,7 @@ class HuggingFaceProvider:
                     
                 elif response.status_code == 429:
                     # Rate limit exceeded
+                    print(f"🔧 HF Debug - Rate limit exceeded (attempt {attempt + 1}/2)")
                     logger.warning(f"Hugging Face API rate limit exceeded (attempt {attempt + 1}/2)")
                     if attempt == 1:  # Last attempt
                         return False, "AI service is temporarily busy, please try again in a few moments", processing_time
@@ -87,6 +101,7 @@ class HuggingFaceProvider:
                     continue
                     
                 else:
+                    print(f"🔧 HF Debug - API error: {response.status_code} - {response.text}")
                     logger.error(f"Hugging Face API error: {response.status_code} - {response.text}")
                     return False, "AI temporarily unavailable", processing_time
                     

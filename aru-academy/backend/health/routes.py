@@ -181,6 +181,28 @@ def seed_database():
             status_code=500
         )
 
+@health_bp.route('/force-seed-database', methods=['POST'])
+def force_seed_database():
+    """
+    Force seed the database with new content (deletes existing courses/resources)
+    """
+    try:
+        from app import force_seed_database
+        
+        # Run force seeding
+        force_seed_database()
+        
+        return success_response(
+            message="Force database seeding completed successfully! All courses and resources have been recreated with new content."
+        )
+        
+    except Exception as e:
+        logger.error(f"Force database seeding failed: {str(e)}")
+        return error_response(
+            message=f"Force database seeding failed: {str(e)}",
+            status_code=500
+        )
+
 @health_bp.route('/check-approved-users', methods=['GET'])
 def check_approved_users():
     """

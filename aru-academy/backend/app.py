@@ -31,6 +31,15 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     
+    # Ensure database is seeded when app is created (for production deployment)
+    with app.app_context():
+        try:
+            db.create_all()
+            seed_database_if_empty()
+        except Exception as e:
+            print(f"⚠️  Database seeding warning: {e}")
+            # Don't fail the app startup if seeding fails
+    
     # JWT setup
     jwt = JWTManager(app)
     
@@ -288,10 +297,24 @@ def seed_database_if_empty():
         # Always create approved users first (independent of other data)
         create_approved_users()
         
-        # Check if database is already seeded
-        if Department.query.count() > 0:
-            print("✅ Database already contains data. Skipping full seeding.")
-            return
+        # Force recreation of courses and resources (for new content)
+        print("🔄 Force recreating courses and resources with new content...")
+        
+        # Delete existing resources first (to avoid foreign key constraints)
+        from models.resource import Resource
+        existing_resources = Resource.query.all()
+        for resource in existing_resources:
+            db.session.delete(resource)
+        print(f"🗑️  Deleted {len(existing_resources)} existing resources")
+        
+        # Delete existing courses
+        existing_courses = Course.query.all()
+        for course in existing_courses:
+            db.session.delete(course)
+        print(f"🗑️  Deleted {len(existing_courses)} existing courses")
+        
+        db.session.commit()
+        print("✅ Cleared existing courses and resources")
         
         print("🌱 Database is empty. Starting full seeding process...")
         
@@ -508,6 +531,250 @@ def seed_database_if_empty():
         db.session.commit()
         print(f"✅ Created {len(courses)} sample courses")
         
+        # Create sample resources/topics for each course
+        from models.resource import Resource, ResourceType
+        
+        def create_resource_if_not_exists(title, description, content, course, resource_type=ResourceType.TEXT):
+            existing_resource = Resource.query.filter_by(title=title, course_id=course.id).first()
+            if not existing_resource:
+                resource = Resource(
+                    title=title,
+                    description=description,
+                    text_content=content,
+                    type=resource_type,
+                    course_id=course.id
+                )
+                db.session.add(resource)
+                print(f"✅ Created resource: {title} for {course.title}")
+                return resource
+            else:
+                print(f"✅ Resource already exists: {title}")
+                return existing_resource
+        
+        # Get all created courses
+        all_courses = Course.query.all()
+        
+        # Create resources for each course
+        for course in all_courses:
+            if "Introduction to Programming" in course.title:
+                # Computer Science - Introduction to Programming
+                create_resource_if_not_exists(
+                    "Variables and Data Types",
+                    "Understanding basic programming concepts",
+                    "Variables are containers for storing data values. In Python, you don't need to declare variables with a specific type. Python automatically determines the type based on the value assigned. Common data types include integers, floats, strings, booleans, lists, and dictionaries.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Control Structures",
+                    "Conditional statements and loops",
+                    "Control structures allow you to control the flow of your program. This includes if-else statements for decision making, for loops for iteration, while loops for repeated execution, and break/continue statements for loop control.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Functions and Modules",
+                    "Code organization and reusability",
+                    "Functions are reusable blocks of code that perform specific tasks. They help organize code and avoid repetition. Modules are files containing Python code that can be imported and used in other programs. This promotes code reusability and maintainability.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Object-Oriented Programming",
+                    "Classes, objects, and inheritance",
+                    "Object-Oriented Programming (OOP) is a programming paradigm based on objects and classes. Key concepts include encapsulation (data hiding), inheritance (code reuse), polymorphism (multiple forms), and abstraction (simplifying complex systems).",
+                    course
+                )
+                
+            elif "Data Structures and Algorithms" in course.title:
+                # Computer Science - Data Structures and Algorithms
+                create_resource_if_not_exists(
+                    "Arrays and Linked Lists",
+                    "Linear data structures",
+                    "Arrays are contiguous memory locations storing elements of the same type. Linked lists are dynamic data structures where elements are stored in nodes with pointers to the next node. Arrays provide O(1) access time but fixed size, while linked lists provide dynamic size but O(n) access time.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Stacks and Queues",
+                    "LIFO and FIFO data structures",
+                    "Stacks follow Last-In-First-Out (LIFO) principle, commonly used for function calls and expression evaluation. Queues follow First-In-First-Out (FIFO) principle, used in scheduling and breadth-first search. Both can be implemented using arrays or linked lists.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Trees and Graphs",
+                    "Hierarchical and network data structures",
+                    "Trees are hierarchical data structures with a root node and child nodes. Binary trees, AVL trees, and B-trees are common variants. Graphs represent relationships between entities using vertices and edges. They're used in social networks, maps, and dependency resolution.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Sorting and Searching Algorithms",
+                    "Efficient data processing techniques",
+                    "Sorting algorithms arrange data in order: bubble sort, selection sort, insertion sort, merge sort, quick sort, and heap sort. Searching algorithms find elements: linear search, binary search, and hash-based search. Time complexity analysis helps choose the right algorithm.",
+                    course
+                )
+                
+            elif "Circuit Analysis" in course.title:
+                # Electrical Engineering - Circuit Analysis
+                create_resource_if_not_exists(
+                    "Ohm's Law and Basic Circuits",
+                    "Fundamental electrical principles",
+                    "Ohm's Law states that voltage equals current times resistance (V = IR). This fundamental relationship governs basic electrical circuits. Understanding voltage, current, and resistance is essential for analyzing simple circuits and understanding electrical behavior.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Kirchhoff's Laws",
+                    "Circuit analysis techniques",
+                    "Kirchhoff's Current Law (KCL) states that the sum of currents entering a node equals the sum leaving. Kirchhoff's Voltage Law (KVL) states that the sum of voltages around any closed loop is zero. These laws are fundamental for analyzing complex circuits.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "AC Circuit Analysis",
+                    "Alternating current circuits",
+                    "AC circuits involve sinusoidal voltages and currents. Key concepts include impedance, phasors, and frequency response. AC analysis requires understanding of complex numbers, reactance, and resonance. Applications include power systems and signal processing.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Network Theorems",
+                    "Advanced circuit analysis methods",
+                    "Network theorems simplify complex circuit analysis. Thevenin's theorem replaces complex networks with equivalent voltage sources. Norton's theorem uses equivalent current sources. Superposition principle allows analyzing circuits with multiple sources by considering one source at a time.",
+                    course
+                )
+                
+            elif "Digital Electronics" in course.title:
+                # Electrical Engineering - Digital Electronics
+                create_resource_if_not_exists(
+                    "Boolean Algebra and Logic Gates",
+                    "Digital logic fundamentals",
+                    "Boolean algebra uses binary values (0 and 1) and logical operations (AND, OR, NOT). Logic gates implement these operations in hardware. Understanding truth tables, logic expressions, and gate combinations is essential for digital circuit design.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Combinational Logic Circuits",
+                    "Logic circuits without memory",
+                    "Combinational circuits produce outputs based only on current inputs. Common examples include adders, multiplexers, decoders, and encoders. These circuits are fundamental building blocks for digital systems and processors.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Sequential Logic Circuits",
+                    "Logic circuits with memory",
+                    "Sequential circuits have memory elements (flip-flops) that store previous states. They include latches, flip-flops, counters, and registers. Clock signals synchronize operations. These circuits enable state machines and complex digital systems.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Memory and Storage Systems",
+                    "Data storage in digital systems",
+                    "Memory systems store and retrieve digital data. Types include RAM (Random Access Memory), ROM (Read-Only Memory), and secondary storage. Understanding memory hierarchy, addressing, and access patterns is crucial for computer architecture.",
+                    course
+                )
+                
+            elif "Engineering Mechanics" in course.title:
+                # Mechanical Engineering - Engineering Mechanics
+                create_resource_if_not_exists(
+                    "Statics and Force Analysis",
+                    "Equilibrium of rigid bodies",
+                    "Statics deals with bodies at rest or in uniform motion. Key concepts include force vectors, moments, equilibrium conditions, and free body diagrams. Understanding how forces act on structures is fundamental for mechanical design and analysis.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Dynamics and Motion",
+                    "Kinematics and kinetics",
+                    "Dynamics studies motion and forces causing motion. Kinematics describes motion without considering forces (position, velocity, acceleration). Kinetics relates forces to motion using Newton's laws. Applications include machine design and vehicle dynamics.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Stress and Strain Analysis",
+                    "Material behavior under loads",
+                    "Stress is force per unit area, strain is deformation per unit length. Understanding stress-strain relationships, elastic and plastic behavior, and failure criteria is essential for material selection and structural design.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Mechanical Systems Design",
+                    "Integration of mechanical components",
+                    "Mechanical systems design involves selecting and integrating components like gears, bearings, springs, and linkages. Design considerations include load capacity, efficiency, reliability, and manufacturability. CAD tools aid in design and analysis.",
+                    course
+                )
+                
+            elif "Thermodynamics" in course.title:
+                # Mechanical Engineering - Thermodynamics
+                create_resource_if_not_exists(
+                    "Laws of Thermodynamics",
+                    "Fundamental energy principles",
+                    "The four laws of thermodynamics govern energy transfer and conversion. The first law (conservation of energy) states energy cannot be created or destroyed. The second law (entropy) describes energy quality and direction of processes. These laws apply to all energy systems.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Heat Transfer Mechanisms",
+                    "Conduction, convection, and radiation",
+                    "Heat transfer occurs through conduction (molecular motion), convection (fluid motion), and radiation (electromagnetic waves). Understanding these mechanisms is crucial for thermal system design, including heat exchangers, cooling systems, and insulation.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Power Cycles and Engines",
+                    "Energy conversion systems",
+                    "Power cycles convert heat to work. Common cycles include Rankine (steam), Brayton (gas turbine), and Otto/Diesel (internal combustion). Understanding cycle efficiency, work output, and heat rejection is essential for power plant and engine design.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Refrigeration and Heat Pumps",
+                    "Cooling and heating systems",
+                    "Refrigeration systems remove heat from low-temperature spaces. Heat pumps can provide both heating and cooling. Understanding coefficient of performance, refrigerants, and system components is important for HVAC and refrigeration applications.",
+                    course
+                )
+                
+            elif "Business Management" in course.title:
+                # Business Administration - Business Management
+                create_resource_if_not_exists(
+                    "Management Principles and Functions",
+                    "Core management concepts",
+                    "Management involves planning, organizing, leading, and controlling organizational resources. Key principles include division of work, authority and responsibility, unity of command, and scalar chain. Understanding these functions is essential for effective leadership.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Organizational Behavior",
+                    "Human behavior in organizations",
+                    "Organizational behavior studies how individuals and groups behave in organizational settings. Topics include motivation theories, leadership styles, team dynamics, and organizational culture. This knowledge helps improve workplace productivity and employee satisfaction.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Strategic Planning and Decision Making",
+                    "Long-term business planning",
+                    "Strategic planning involves setting long-term goals and developing plans to achieve them. Decision-making processes include problem identification, alternative generation, evaluation, and implementation. Tools like SWOT analysis and decision trees aid in strategic planning.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Operations and Supply Chain Management",
+                    "Efficient business operations",
+                    "Operations management focuses on producing goods and services efficiently. Supply chain management coordinates activities from raw materials to final products. Key concepts include quality management, inventory control, and process optimization.",
+                    course
+                )
+                
+            elif "Financial Accounting" in course.title:
+                # Business Administration - Financial Accounting
+                create_resource_if_not_exists(
+                    "Accounting Principles and Standards",
+                    "Fundamental accounting concepts",
+                    "Accounting principles include the accrual basis, matching principle, and conservatism. Generally Accepted Accounting Principles (GAAP) provide standardized guidelines for financial reporting. Understanding these principles ensures accurate and consistent financial statements.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Financial Statements Analysis",
+                    "Balance sheet, income statement, and cash flow",
+                    "Financial statements provide information about a company's financial position and performance. The balance sheet shows assets, liabilities, and equity. The income statement shows revenues and expenses. The cash flow statement shows cash inflows and outflows.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Cost Accounting and Budgeting",
+                    "Internal financial management",
+                    "Cost accounting tracks and analyzes costs for decision-making. Budgeting involves planning future financial activities. Key concepts include cost classification, variance analysis, and performance measurement. These tools help control costs and improve profitability.",
+                    course
+                )
+                create_resource_if_not_exists(
+                    "Auditing and Internal Controls",
+                    "Financial integrity and compliance",
+                    "Auditing examines financial records for accuracy and compliance. Internal controls are procedures to safeguard assets and ensure reliable financial reporting. Understanding audit procedures, risk assessment, and control testing is essential for financial integrity.",
+                    course
+                )
+        
+        db.session.commit()
+        print(f"✅ Created sample resources/topics for all courses")
+        
         # Approved users already created by create_approved_users() function
         
         print("🎉 Database seeding completed successfully!")
@@ -515,6 +782,7 @@ def seed_database_if_empty():
         print(f"   - Departments: {len(departments)}")
         print(f"   - Users: {len(users) + 1} (1 admin + 4 instructors + 12 students)")
         print(f"   - Courses: {len(courses)}")
+        print(f"   - Resources/Topics: {Resource.query.count()}")
         print(f"   - Approved Users: 2")
         print("\n🔑 Default Login Credentials:")
         print("   Admin: admin@aru.academy / Admin@123")
@@ -530,6 +798,47 @@ def seed_database_if_empty():
         
     except Exception as e:
         print(f"❌ Error during database seeding: {str(e)}")
+        db.session.rollback()
+        raise
+
+def force_seed_database():
+    """Force seed database with new content (deletes existing courses/resources)"""
+    try:
+        print("🔄 FORCE SEEDING: Recreating all courses and resources...")
+        
+        from models.department import Department
+        from models.user import User, UserRole, UserStatus
+        from models.approved_user import ApprovedUser
+        from models.course import Course
+        from models.resource import Resource
+        from datetime import datetime
+        
+        # Always create approved users first (independent of other data)
+        create_approved_users()
+        
+        # Delete existing resources first (to avoid foreign key constraints)
+        existing_resources = Resource.query.all()
+        for resource in existing_resources:
+            db.session.delete(resource)
+        print(f"🗑️  Deleted {len(existing_resources)} existing resources")
+        
+        # Delete existing courses
+        existing_courses = Course.query.all()
+        for course in existing_courses:
+            db.session.delete(course)
+        print(f"🗑️  Deleted {len(existing_courses)} existing courses")
+        
+        db.session.commit()
+        print("✅ Cleared existing courses and resources")
+        
+        # Now run the full seeding process
+        print("🌱 Starting full seeding process with new content...")
+        seed_database_if_empty()
+        
+        print("🎉 FORCE SEEDING completed successfully!")
+        
+    except Exception as e:
+        print(f"❌ Error during force seeding: {str(e)}")
         db.session.rollback()
         raise
 

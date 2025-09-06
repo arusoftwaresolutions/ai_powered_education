@@ -129,8 +129,19 @@
 
                         <form id="quizGeneratorForm" class="generator-form">
                             <div class="form-group">
-                                <label for="quizTopic">Topic or Subject</label>
-                                <input type="text" id="quizTopic" name="topic" placeholder="e.g., Python Programming, Calculus, Business Ethics" required>
+                                <label for="courseContext">Course Context</label>
+                                <select id="courseContext" name="course_id" required>
+                                    <option value="">Select Course</option>
+                                </select>
+                                <small>Select a course to access its topics and generate relevant questions</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="quizTopic">Topic</label>
+                                <select id="quizTopic" name="topic" required disabled>
+                                    <option value="">Select a course first</option>
+                                </select>
+                                <small>Topics are automatically loaded from the selected course</small>
                             </div>
 
                             <div class="form-group">
@@ -160,14 +171,6 @@
                                     <option value="intermediate" selected>Intermediate</option>
                                     <option value="advanced">Advanced</option>
                                 </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="courseContext">Course Context (Optional)</label>
-                                <select id="courseContext" name="course_id">
-                                    <option value="">Select Course for Context</option>
-                                </select>
-                                <small>Selecting a course will help generate more relevant questions</small>
                             </div>
 
                             <div class="form-group">
@@ -499,7 +502,7 @@
             const quizData = {
                 topic: formData.get('topic'),
                 type: formData.get('type'),
-                count: parseInt(formData.get('count')),
+                num_questions: parseInt(formData.get('count')),
                 difficulty: formData.get('difficulty'),
                 course_id: formData.get('course_id') || null,
                 context: formData.get('context')
@@ -541,6 +544,23 @@
                 document.getElementById('quizTitle').value = currentQuiz.topic || 'Generated Quiz';
                 document.getElementById('saveQuizModal').style.display = 'block';
                 document.body.classList.add('modal-open');
+            }
+        });
+
+        // Course selection event listener
+        document.getElementById('courseContext').addEventListener('change', function() {
+            const courseId = this.value;
+            const topicSelect = document.getElementById('quizTopic');
+            
+            if (courseId) {
+                // Enable topic select and load topics
+                topicSelect.disabled = false;
+                topicSelect.innerHTML = '<option value="">Loading topics...</option>';
+                loadCourseTopics(courseId);
+            } else {
+                // Disable topic select and reset
+                topicSelect.disabled = true;
+                topicSelect.innerHTML = '<option value="">Select a course first</option>';
             }
         });
 
@@ -1045,12 +1065,13 @@
 
         async function loadUserCourses() {
             try {
-                const response = await api.get('/api/courses/');
+                const response = await api.get('/api/courses/ai-tutor');
                 if (response.success) {
                     populateCourseSelects(response.data);
                 }
             } catch (error) {
                 console.error('Error loading user courses:', error);
+                showAlert('Failed to load courses', 'error');
             }
         }
 
@@ -1059,11 +1080,11 @@
             const quizCourse = document.getElementById('quizCourse');
             
             if (courseContext) {
-                courseContext.innerHTML = '<option value="">Select Course for Context</option>';
+                courseContext.innerHTML = '<option value="">Select Course</option>';
                 courses.forEach(course => {
                     const option = document.createElement('option');
                     option.value = course.id;
-                    option.textContent = course.title;
+                    option.textContent = `${course.code} - ${course.title} (${course.department})`;
                     courseContext.appendChild(option);
                 });
             }
@@ -1073,9 +1094,50 @@
                 courses.forEach(course => {
                     const option = document.createElement('option');
                     option.value = course.id;
-                    option.textContent = course.title;
+                    option.textContent = `${course.code} - ${course.title}`;
                     quizCourse.appendChild(option);
                 });
+            }
+        }
+
+        async function loadCourseTopics(courseId) {
+            try {
+                const response = await api.get(`/api/courses/${courseId}/topics`);
+                if (response.success) {
+                    populateTopicSelect(response.data);
+                } else {
+                    console.error('Failed to load topics:', response.message);
+                    showAlert('Failed to load course topics', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading course topics:', error);
+                showAlert('Failed to load course topics', 'error');
+            }
+        }
+
+        function populateTopicSelect(topics) {
+            const topicSelect = document.getElementById('quizTopic');
+            
+            if (topicSelect) {
+                topicSelect.innerHTML = '<option value="">Select Topic</option>';
+                
+                if (topics.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No topics available for this course';
+                    option.disabled = true;
+                    topicSelect.appendChild(option);
+                } else {
+                    topics.forEach(topic => {
+                        const option = document.createElement('option');
+                        option.value = topic.title;
+                        option.textContent = topic.title;
+                        if (topic.description) {
+                            option.title = topic.description;
+                        }
+                        topicSelect.appendChild(option);
+                    });
+                }
             }
         }
 
