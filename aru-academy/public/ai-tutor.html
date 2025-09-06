@@ -1065,17 +1065,24 @@
 
         async function loadUserCourses() {
             try {
+                console.log('🔄 Loading user courses...');
                 const response = await api.get('/api/courses/ai-tutor');
+                console.log('📊 Courses API response:', response);
                 if (response.success) {
+                    console.log('✅ Courses loaded successfully:', response.data);
                     populateCourseSelects(response.data);
+                } else {
+                    console.error('❌ Courses API returned error:', response.message);
+                    showAlert('Failed to load courses: ' + (response.message || 'Unknown error'), 'error');
                 }
             } catch (error) {
-                console.error('Error loading user courses:', error);
-                showAlert('Failed to load courses', 'error');
+                console.error('❌ Error loading user courses:', error);
+                showAlert('Failed to load courses: ' + error.message, 'error');
             }
         }
 
         function populateCourseSelects(courses) {
+            console.log('🔄 Populating course selects with:', courses);
             const courseContext = document.getElementById('courseContext');
             const quizCourse = document.getElementById('quizCourse');
             
@@ -1086,7 +1093,11 @@
                     option.value = course.id;
                     option.textContent = `${course.code} - ${course.title} (${course.department})`;
                     courseContext.appendChild(option);
+                    console.log('✅ Added course option:', option.textContent);
                 });
+                console.log('✅ Course context populated with', courses.length, 'courses');
+            } else {
+                console.error('❌ Course context element not found');
             }
             
             if (quizCourse) {
@@ -1097,6 +1108,9 @@
                     option.textContent = `${course.code} - ${course.title}`;
                     quizCourse.appendChild(option);
                 });
+                console.log('✅ Quiz course populated with', courses.length, 'courses');
+            } else {
+                console.error('❌ Quiz course element not found');
             }
         }
 

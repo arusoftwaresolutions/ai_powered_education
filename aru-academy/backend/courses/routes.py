@@ -63,7 +63,7 @@ def get_courses_for_ai_tutor():
             course_data.append({
                 'id': course.id,
                 'title': course.title,
-                'code': course.code,
+                'code': course.department.name[:2].upper() if course.department else 'N/A',  # Generate code from department name
                 'department': course.department.name if course.department else 'Unknown'
             })
         

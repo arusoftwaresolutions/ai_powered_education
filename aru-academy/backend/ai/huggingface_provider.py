@@ -17,6 +17,14 @@ class HuggingFaceProvider:
             "Authorization": f"Bearer {api_token}",
             "Content-Type": "application/json"
         }
+        
+        # Fallback models to try if the primary one fails
+        self.fallback_models = [
+            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-large",
+            "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
+            "https://api-inference.huggingface.co/models/gpt2",
+            "https://api-inference.huggingface.co/models/distilgpt2"
+        ]
     
     def ask_question(self, question: str, context: str = "") -> Tuple[bool, str, float]:
         """
@@ -100,6 +108,11 @@ class HuggingFaceProvider:
                     time.sleep(3)  # Wait 3 seconds before retry
                     continue
                     
+                elif response.status_code == 404:
+                    # Model not found, try fallback models
+                    print(f"🔧 HF Debug - Model not found (404), trying fallback models")
+                    return self._try_fallback_models(question, context, start_time)
+                    
                 else:
                     print(f"🔧 HF Debug - API error: {response.status_code} - {response.text}")
                     logger.error(f"Hugging Face API error: {response.status_code} - {response.text}")
@@ -132,6 +145,65 @@ class HuggingFaceProvider:
         # If we get here, all attempts failed
         processing_time = time.time() - start_time
         return False, "AI temporarily unavailable", processing_time
+    
+    def _try_fallback_models(self, question: str, context: str, start_time: float) -> Tuple[bool, str, float]:
+        """Try fallback models if the primary model fails"""
+        for i, fallback_url in enumerate(self.fallback_models):
+            print(f"🔧 HF Debug - Trying fallback model {i + 1}/{len(self.fallback_models)}: {fallback_url}")
+            
+            try:
+                # Prepare prompt with context
+                if context:
+                    prompt = f"Context: {context}\n\nQuestion: {question}\n\nAnswer:"
+                else:
+                    prompt = f"Question: {question}\n\nAnswer:"
+                
+                payload = {
+                    "inputs": prompt,
+                    "parameters": {
+                        "max_new_tokens": 500,
+                        "temperature": 0.7,
+                        "top_p": 0.9,
+                        "do_sample": True
+                    }
+                }
+                
+                response = requests.post(
+                    fallback_url,
+                    headers=self.headers,
+                    json=payload,
+                    timeout=30
+                )
+                
+                print(f"🔧 HF Debug - Fallback model {i + 1} response status: {response.status_code}")
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if isinstance(result, list) and len(result) > 0:
+                        answer = result[0].get('generated_text', '')
+                        # Extract only the answer part
+                        if 'Answer:' in answer:
+                            answer = answer.split('Answer:')[-1].strip()
+                        processing_time = time.time() - start_time
+                        print(f"✅ HF Success with fallback model {i + 1}: {fallback_url}")
+                        return True, answer, processing_time
+                
+                elif response.status_code == 404:
+                    print(f"🔧 HF Debug - Fallback model {i + 1} also not found (404)")
+                    continue  # Try next fallback model
+                
+                else:
+                    print(f"🔧 HF Debug - Fallback model {i + 1} error: {response.status_code}")
+                    continue  # Try next fallback model
+                    
+            except Exception as e:
+                print(f"🔧 HF Debug - Fallback model {i + 1} exception: {e}")
+                continue  # Try next fallback model
+        
+        # All fallback models failed
+        processing_time = time.time() - start_time
+        print(f"❌ HF Failed - All {len(self.fallback_models)} fallback models failed")
+        return False, "AI service temporarily unavailable", processing_time
     
     def generate_quiz_questions(self, topic: str, resource_content: str = "", num_questions: int = 5) -> Tuple[bool, List[Dict], float]:
         """

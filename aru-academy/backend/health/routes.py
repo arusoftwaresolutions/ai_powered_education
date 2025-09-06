@@ -270,3 +270,52 @@ def test_auth():
             status_code=500
         )
 
+@health_bp.route('/test-huggingface', methods=['GET'])
+def test_huggingface():
+    """
+    Test Hugging Face API directly
+    """
+    try:
+        import requests
+        from flask import current_app
+        
+        api_token = current_app.config.get('HF_API_TOKEN')
+        api_url = current_app.config.get('HF_API_URL')
+        
+        if not api_token:
+            return error_response("Hugging Face API token not configured", 400)
+        
+        headers = {
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "inputs": "What is 2+2?",
+            "parameters": {
+                "max_new_tokens": 50,
+                "temperature": 0.7
+            }
+        }
+        
+        print(f"🧪 Testing Hugging Face API: {api_url}")
+        response = requests.post(api_url, headers=headers, json=payload, timeout=30)
+        
+        return success_response(
+            data={
+                'api_url': api_url,
+                'api_token_configured': bool(api_token),
+                'response_status': response.status_code,
+                'response_text': response.text[:500] if response.text else 'No response text',
+                'response_headers': dict(response.headers)
+            },
+            message=f"Hugging Face API test completed with status {response.status_code}"
+        )
+        
+    except Exception as e:
+        logger.error(f"Hugging Face test failed: {str(e)}")
+        return error_response(
+            message=f"Hugging Face test failed: {str(e)}",
+            status_code=500
+        )
+

@@ -37,7 +37,7 @@ class Config:
     UPLOAD_FOLDER = 'storage/departments'
     
     # Hugging Face settings
-    HF_API_URL = os.getenv('HF_API_URL', 'https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct')
+    HF_API_URL = os.getenv('HF_API_URL', 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-large')
     HF_API_TOKEN = os.getenv('HF_API_TOKEN')
     
     # Rate limiting

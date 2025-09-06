@@ -213,6 +213,7 @@ def ask_question():
             
             print(f"🔧 Debug - API Token configured: {bool(api_token)}")
             print(f"🔧 Debug - API URL: {api_url}")
+            print(f"🔧 Debug - API Token (first 10 chars): {api_token[:10] if api_token else 'None'}...")
             
             if not api_token:
                 print("⚠️  HuggingFace API token not configured, using enhanced fallback response")
@@ -225,6 +226,7 @@ def ask_question():
                 success, answer, processing_time = hf_provider.ask_question(question, context)
                 print(f"🤖 AI Response - Success: {success}, Time: {processing_time:.2f}s")
                 print(f"🤖 AI Response - Answer length: {len(answer) if answer else 0}")
+                print(f"🤖 AI Response - Answer preview: {answer[:100] if answer else 'None'}...")
                 
                 # If AI service fails, use enhanced fallback but treat as success
                 if not success:
@@ -237,6 +239,8 @@ def ask_question():
                     print(f"✅ AI Success - Real AI response received!")
         except Exception as e:
             print(f"❌ AI Service Error: {e}")
+            import traceback
+            print(f"❌ AI Service Error Traceback: {traceback.format_exc()}")
             # Fallback to enhanced responses if AI service is unavailable
             success = True  # Treat fallback as success
             answer = get_enhanced_fallback_response(question, context)
