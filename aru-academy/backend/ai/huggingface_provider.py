@@ -20,6 +20,7 @@ class HuggingFaceProvider:
         
         # Fallback models to try if the primary one fails (prioritizing faster, more reliable models)
         self.fallback_models = [
+            "https://api-inference.huggingface.co/models/google/gemma-2-2b-it",  # Fast and high quality
             "https://api-inference.huggingface.co/models/distilgpt2",  # Fastest and most reliable
             "https://api-inference.huggingface.co/models/gpt2",  # Fast and reliable
             "https://api-inference.huggingface.co/models/microsoft/DialoGPT-small",  # Conversational but slower
@@ -42,20 +43,21 @@ class HuggingFaceProvider:
         # Try up to 2 times for better reliability
         for attempt in range(2):
             try:
-                # Prepare prompt with context (optimized for DialoGPT)
+                # Prepare prompt with context (compatible with Gemma and other models)
                 if context:
-                    prompt = f"Context: {context}\n\nHuman: {question}\n\nAssistant:"
+                    prompt = f"<start_of_turn>user\nContext: {context}\n\nQuestion: {question}<end_of_turn>\n<start_of_turn>model\n"
                 else:
-                    prompt = f"Human: {question}\n\nAssistant:"
+                    prompt = f"<start_of_turn>user\n{question}<end_of_turn>\n<start_of_turn>model\n"
                 
                 payload = {
                     "inputs": prompt,
                     "parameters": {
-                        "max_new_tokens": 150,
+                        "max_new_tokens": 200,
                         "temperature": 0.7,
                         "top_p": 0.9,
                         "do_sample": True,
-                        "repetition_penalty": 1.1
+                        "repetition_penalty": 1.1,
+                        "stop": ["<end_of_turn>", "<start_of_turn>"]
                     }
                 }
                 
@@ -82,14 +84,21 @@ class HuggingFaceProvider:
                     if isinstance(result, list) and len(result) > 0:
                         answer = result[0].get('generated_text', '')
                         print(f"🔧 HF Debug - Generated text: {answer[:200]}...")
-                        # Extract only the assistant response part
-                        if 'Assistant:' in answer:
+                        # Extract only the model response part (compatible with Gemma and other models)
+                        if '<start_of_turn>model' in answer:
+                            # Extract everything after the model turn marker
+                            answer = answer.split('<start_of_turn>model')[-1].strip()
+                        elif 'Assistant:' in answer:
+                            # Fallback for older format
                             answer = answer.split('Assistant:')[-1].strip()
                         elif 'Human:' in answer:
                             # If it includes the human part, extract everything after the last Human:
                             parts = answer.split('Human:')
                             if len(parts) > 1:
                                 answer = parts[-1].strip()
+                        
+                        # Clean up any remaining turn markers
+                        answer = answer.replace('<end_of_turn>', '').replace('<start_of_turn>', '').strip()
                         print(f"🔧 HF Debug - Final answer: {answer[:200]}...")
                         return True, answer, processing_time
                     else:
@@ -158,20 +167,21 @@ class HuggingFaceProvider:
             print(f"🔧 HF Debug - Trying fallback model {i + 1}/{len(self.fallback_models)}: {fallback_url}")
             
             try:
-                # Prepare prompt with context (optimized for DialoGPT)
+                # Prepare prompt with context (compatible with Gemma and other models)
                 if context:
-                    prompt = f"Context: {context}\n\nHuman: {question}\n\nAssistant:"
+                    prompt = f"<start_of_turn>user\nContext: {context}\n\nQuestion: {question}<end_of_turn>\n<start_of_turn>model\n"
                 else:
-                    prompt = f"Human: {question}\n\nAssistant:"
+                    prompt = f"<start_of_turn>user\n{question}<end_of_turn>\n<start_of_turn>model\n"
                 
                 payload = {
                     "inputs": prompt,
                     "parameters": {
-                        "max_new_tokens": 150,
+                        "max_new_tokens": 200,
                         "temperature": 0.7,
                         "top_p": 0.9,
                         "do_sample": True,
-                        "repetition_penalty": 1.1
+                        "repetition_penalty": 1.1,
+                        "stop": ["<end_of_turn>", "<start_of_turn>"]
                     }
                 }
                 
@@ -188,14 +198,21 @@ class HuggingFaceProvider:
                     result = response.json()
                     if isinstance(result, list) and len(result) > 0:
                         answer = result[0].get('generated_text', '')
-                        # Extract only the assistant response part
-                        if 'Assistant:' in answer:
+                        # Extract only the model response part (compatible with Gemma and other models)
+                        if '<start_of_turn>model' in answer:
+                            # Extract everything after the model turn marker
+                            answer = answer.split('<start_of_turn>model')[-1].strip()
+                        elif 'Assistant:' in answer:
+                            # Fallback for older format
                             answer = answer.split('Assistant:')[-1].strip()
                         elif 'Human:' in answer:
                             # If it includes the human part, extract everything after the last Human:
                             parts = answer.split('Human:')
                             if len(parts) > 1:
                                 answer = parts[-1].strip()
+                        
+                        # Clean up any remaining turn markers
+                        answer = answer.replace('<end_of_turn>', '').replace('<start_of_turn>', '').strip()
                         processing_time = time.time() - start_time
                         print(f"✅ HF Success with fallback model {i + 1}: {fallback_url}")
                         return True, answer, processing_time
