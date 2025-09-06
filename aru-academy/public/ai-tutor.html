@@ -637,30 +637,68 @@
         function displayGeneratedQuiz(quiz) {
             const quizContent = document.getElementById('quizContent');
             
-            let questionsHTML = '';
+            let questionsHTML = `
+                <div class="quiz-instructions">
+                    <h4>📝 Quiz Instructions</h4>
+                    <p>• Read each question carefully</p>
+                    <p>• Select the best answer for each question</p>
+                    <p>• Click "Submit Quiz" when you're done</p>
+                    <p>• You'll see your score and explanations after submission</p>
+                </div>
+                <div class="quiz-timer" id="quizTimer" style="display: none;">
+                    <span>⏱️ Time: <span id="timeDisplay">00:00</span></span>
+                </div>
+            `;
+            
             quiz.questions.forEach((question, index) => {
                 if (question.type === 'multiple_choice') {
                     questionsHTML += `
-                        <div class="quiz-question">
+                        <div class="quiz-question" data-question-id="${index}">
                             <h5>Question ${index + 1}</h5>
                             <p>${question.question}</p>
                             <div class="question-options">
                                 ${question.options.map((option, optIndex) => 
                                     `<label class="option-label">
-                                        <input type="radio" name="q${index}" value="${optIndex}" disabled>
-                                        <span class="option-text">${option}</span>
+                                        <input type="radio" name="q${index}" value="${optIndex}" data-correct="${optIndex === question.correct_answer}">
+                                        <span class="option-text">${String.fromCharCode(65 + optIndex)}. ${option}</span>
                                     </label>`
                                 ).join('')}
                             </div>
-                            <div class="question-answer">
-                                <strong>Answer:</strong> ${question.answer}
+                            <div class="question-feedback" id="feedback-${index}" style="display: none;">
+                                <div class="feedback-content">
+                                    <div class="feedback-result"></div>
+                                    <div class="feedback-explanation"></div>
+                                </div>
                             </div>
-                            ${question.explanation ? `<div class="question-explanation"><strong>Explanation:</strong> ${question.explanation}</div>` : ''}
+                        </div>
+                    `;
+                } else if (question.type === 'short_answer') {
+                    questionsHTML += `
+                        <div class="quiz-question" data-question-id="${index}">
+                            <h5>Question ${index + 1}</h5>
+                            <p>${question.question}</p>
+                            <div class="short-answer-container">
+                                <textarea 
+                                    name="q${index}" 
+                                    id="answer-${index}" 
+                                    class="short-answer-input" 
+                                    placeholder="Type your answer here..."
+                                    rows="4"
+                                ></textarea>
+                                <div class="answer-hint">💡 Tip: Be specific and provide examples when possible</div>
+                            </div>
+                            <div class="question-feedback" id="feedback-${index}" style="display: none;">
+                                <div class="feedback-content">
+                                    <div class="feedback-result"></div>
+                                    <div class="feedback-explanation"></div>
+                                    <div class="feedback-suggestions"></div>
+                                </div>
+                            </div>
                         </div>
                     `;
                 } else {
                     questionsHTML += `
-                        <div class="quiz-question">
+                        <div class="quiz-question" data-question-id="${index}">
                             <h5>Question ${index + 1}</h5>
                             <p>${question.question}</p>
                             <div class="question-answer">
@@ -672,7 +710,337 @@
                 }
             });
             
+            questionsHTML += `
+                <div class="quiz-actions">
+                    <button class="btn btn-primary" id="submitQuizBtn">Submit Quiz</button>
+                    <button class="btn btn-outline" id="resetQuizBtn">Reset Answers</button>
+                </div>
+                <div class="quiz-results" id="quizResults" style="display: none;">
+                    <div class="results-header">
+                        <h4>📊 Quiz Results</h4>
+                    </div>
+                    <div class="results-content">
+                        <div class="score-display">
+                            <div class="score-circle">
+                                <span class="score-number" id="scoreNumber">0</span>
+                                <span class="score-total">/ ${quiz.questions.length}</span>
+                            </div>
+                            <div class="score-percentage" id="scorePercentage">0%</div>
+                        </div>
+                        <div class="score-breakdown">
+                            <div class="correct-answers">
+                                <span class="correct-count" id="correctCount">0</span> Correct
+                            </div>
+                            <div class="incorrect-answers">
+                                <span class="incorrect-count" id="incorrectCount">0</span> Incorrect
+                            </div>
+                        </div>
+                        <div class="performance-message" id="performanceMessage"></div>
+                    </div>
+                </div>
+            `;
+            
             quizContent.innerHTML = questionsHTML;
+            
+            // Add event listeners for the new interactive elements
+            setupQuizInteractivity(quiz);
+        }
+        
+        function setupQuizInteractivity(quiz) {
+            // Submit quiz functionality
+            document.getElementById('submitQuizBtn').addEventListener('click', function() {
+                submitQuiz(quiz);
+            });
+            
+            // Reset quiz functionality
+            document.getElementById('resetQuizBtn').addEventListener('click', function() {
+                resetQuiz();
+            });
+            
+            // Add change listeners to radio buttons for immediate feedback (optional)
+            const radioButtons = document.querySelectorAll('input[type="radio"]');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    // Optional: Show immediate feedback or just track selection
+                    const questionId = this.name.replace('q', '');
+                    const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+                    questionElement.classList.add('answered');
+                });
+            });
+        }
+        
+        async function submitQuiz(quiz) {
+            const answers = {};
+            let correctCount = 0;
+            let totalQuestions = quiz.questions.length;
+            let processedQuestions = 0;
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submitQuizBtn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Evaluating Answers...';
+            submitBtn.disabled = true;
+            
+            // Collect answers and check correctness
+            for (let index = 0; index < quiz.questions.length; index++) {
+                const question = quiz.questions[index];
+                const questionElement = document.querySelector(`[data-question-id="${index}"]`);
+                const feedbackElement = document.getElementById(`feedback-${index}`);
+                
+                if (question.type === 'multiple_choice') {
+                    const selectedAnswer = document.querySelector(`input[name="q${index}"]:checked`);
+                    
+                    if (selectedAnswer) {
+                        const selectedIndex = parseInt(selectedAnswer.value);
+                        const isCorrect = selectedIndex === question.correct_answer;
+                        
+                        answers[index] = {
+                            selected: selectedIndex,
+                            correct: question.correct_answer,
+                            isCorrect: isCorrect
+                        };
+                        
+                        if (isCorrect) {
+                            correctCount++;
+                        }
+                        
+                        // Show feedback
+                        showQuestionFeedback(feedbackElement, question, selectedIndex, isCorrect);
+                    } else {
+                        answers[index] = {
+                            selected: null,
+                            correct: question.correct_answer,
+                            isCorrect: false
+                        };
+                        
+                        // Show feedback for unanswered question
+                        showQuestionFeedback(feedbackElement, question, null, false);
+                    }
+                } else if (question.type === 'short_answer') {
+                    const studentAnswer = document.getElementById(`answer-${index}`).value.trim();
+                    
+                    if (studentAnswer) {
+                        try {
+                            // Evaluate short answer using AI
+                            const evaluation = await evaluateShortAnswer(question.question, studentAnswer, question.correct_answer);
+                            
+                            answers[index] = {
+                                studentAnswer: studentAnswer,
+                                correctAnswer: question.correct_answer,
+                                isCorrect: evaluation.is_correct,
+                                score: evaluation.score,
+                                feedback: evaluation.feedback,
+                                suggestions: evaluation.suggestions
+                            };
+                            
+                            if (evaluation.is_correct) {
+                                correctCount++;
+                            }
+                            
+                            // Show feedback
+                            showShortAnswerFeedback(feedbackElement, question, studentAnswer, evaluation);
+                        } catch (error) {
+                            console.error('Error evaluating short answer:', error);
+                            // Fallback to treating as incorrect
+                            answers[index] = {
+                                studentAnswer: studentAnswer,
+                                correctAnswer: question.correct_answer,
+                                isCorrect: false,
+                                score: 0,
+                                feedback: "Unable to evaluate answer at this time.",
+                                suggestions: "Please try again later."
+                            };
+                            
+                            showShortAnswerFeedback(feedbackElement, question, studentAnswer, answers[index]);
+                        }
+                    } else {
+                        answers[index] = {
+                            studentAnswer: '',
+                            correctAnswer: question.correct_answer,
+                            isCorrect: false,
+                            score: 0,
+                            feedback: "No answer provided.",
+                            suggestions: "Please provide an answer to receive feedback."
+                        };
+                        
+                        showShortAnswerFeedback(feedbackElement, question, '', answers[index]);
+                    }
+                }
+                
+                processedQuestions++;
+                // Update progress
+                submitBtn.textContent = `Evaluating... ${processedQuestions}/${totalQuestions}`;
+            }
+            
+            // Calculate score
+            const score = correctCount;
+            const percentage = Math.round((correctCount / totalQuestions) * 100);
+            
+            // Display results
+            displayQuizResults(score, totalQuestions, percentage);
+            
+            // Reset button
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = true;
+            document.getElementById('resetQuizBtn').disabled = true;
+            
+            // Disable all inputs
+            const radioButtons = document.querySelectorAll('input[type="radio"]');
+            radioButtons.forEach(radio => radio.disabled = true);
+            
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(textarea => textarea.disabled = true);
+        }
+        
+        async function evaluateShortAnswer(question, studentAnswer, correctAnswer) {
+            try {
+                const response = await api.post('/api/ai/evaluate-answer', {
+                    question: question,
+                    student_answer: studentAnswer,
+                    correct_answer: correctAnswer
+                });
+                
+                if (response.success) {
+                    return response.evaluation;
+                } else {
+                    throw new Error(response.message || 'Evaluation failed');
+                }
+            } catch (error) {
+                console.error('Error calling evaluation API:', error);
+                throw error;
+            }
+        }
+        
+        function showQuestionFeedback(feedbackElement, question, selectedIndex, isCorrect) {
+            const feedbackContent = feedbackElement.querySelector('.feedback-content');
+            const resultDiv = feedbackContent.querySelector('.feedback-result');
+            const explanationDiv = feedbackContent.querySelector('.feedback-explanation');
+            
+            if (isCorrect) {
+                resultDiv.innerHTML = `
+                    <div class="feedback-correct">
+                        <span class="feedback-icon">✅</span>
+                        <span class="feedback-text">Correct!</span>
+                    </div>
+                `;
+            } else {
+                const correctOption = String.fromCharCode(65 + question.correct_answer);
+                resultDiv.innerHTML = `
+                    <div class="feedback-incorrect">
+                        <span class="feedback-icon">❌</span>
+                        <span class="feedback-text">Incorrect. The correct answer is ${correctOption}.</span>
+                    </div>
+                `;
+            }
+            
+            explanationDiv.innerHTML = `
+                <div class="explanation-text">
+                    <strong>Explanation:</strong> ${question.explanation}
+                </div>
+            `;
+            
+            feedbackElement.style.display = 'block';
+        }
+        
+        function showShortAnswerFeedback(feedbackElement, question, studentAnswer, evaluation) {
+            const feedbackContent = feedbackElement.querySelector('.feedback-content');
+            const resultDiv = feedbackContent.querySelector('.feedback-result');
+            const explanationDiv = feedbackContent.querySelector('.feedback-explanation');
+            const suggestionsDiv = feedbackContent.querySelector('.feedback-suggestions');
+            
+            if (evaluation.is_correct) {
+                resultDiv.innerHTML = `
+                    <div class="feedback-correct">
+                        <span class="feedback-icon">✅</span>
+                        <span class="feedback-text">Good Answer! (${evaluation.score}%)</span>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="feedback-incorrect">
+                        <span class="feedback-icon">❌</span>
+                        <span class="feedback-text">Needs Improvement (${evaluation.score}%)</span>
+                    </div>
+                `;
+            }
+            
+            explanationDiv.innerHTML = `
+                <div class="explanation-text">
+                    <strong>Feedback:</strong> ${evaluation.feedback}
+                </div>
+            `;
+            
+            if (evaluation.suggestions) {
+                suggestionsDiv.innerHTML = `
+                    <div class="suggestions-text">
+                        <strong>Suggestions:</strong> ${evaluation.suggestions}
+                    </div>
+                `;
+            }
+            
+            feedbackElement.style.display = 'block';
+        }
+        
+        function displayQuizResults(score, total, percentage) {
+            document.getElementById('scoreNumber').textContent = score;
+            document.getElementById('scorePercentage').textContent = percentage + '%';
+            document.getElementById('correctCount').textContent = score;
+            document.getElementById('incorrectCount').textContent = total - score;
+            
+            // Performance message
+            let performanceMessage = '';
+            if (percentage >= 90) {
+                performanceMessage = '🎉 Excellent work! You have a strong understanding of this topic.';
+            } else if (percentage >= 80) {
+                performanceMessage = '👍 Good job! You have a solid grasp of the material.';
+            } else if (percentage >= 70) {
+                performanceMessage = '📚 Not bad! Review the explanations and try again.';
+            } else if (percentage >= 60) {
+                performanceMessage = '💪 Keep studying! Focus on the areas you missed.';
+            } else {
+                performanceMessage = '📖 More study needed. Review the material and explanations carefully.';
+            }
+            
+            document.getElementById('performanceMessage').textContent = performanceMessage;
+            document.getElementById('quizResults').style.display = 'block';
+            
+            // Scroll to results
+            document.getElementById('quizResults').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function resetQuiz() {
+            // Clear all selections
+            const radioButtons = document.querySelectorAll('input[type="radio"]');
+            radioButtons.forEach(radio => {
+                radio.checked = false;
+                radio.disabled = false;
+            });
+            
+            // Clear all textareas
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                textarea.value = '';
+                textarea.disabled = false;
+            });
+            
+            // Hide all feedback
+            const feedbackElements = document.querySelectorAll('.question-feedback');
+            feedbackElements.forEach(feedback => {
+                feedback.style.display = 'none';
+            });
+            
+            // Hide results
+            document.getElementById('quizResults').style.display = 'none';
+            
+            // Re-enable buttons
+            document.getElementById('submitQuizBtn').disabled = false;
+            document.getElementById('resetQuizBtn').disabled = false;
+            
+            // Remove answered class from questions
+            const questionElements = document.querySelectorAll('.quiz-question');
+            questionElements.forEach(question => {
+                question.classList.remove('answered');
+            });
         }
 
         async function loadUserCourses() {

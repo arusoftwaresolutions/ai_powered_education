@@ -31,65 +31,92 @@ class HuggingFaceProvider:
         """
         start_time = time.time()
         
-        try:
-            # Prepare prompt with context
-            if context:
-                prompt = f"Context: {context}\n\nQuestion: {question}\n\nAnswer:"
-            else:
-                prompt = f"Question: {question}\n\nAnswer:"
-            
-            payload = {
-                "inputs": prompt,
-                "parameters": {
-                    "max_new_tokens": 500,
-                    "temperature": 0.7,
-                    "top_p": 0.9,
-                    "do_sample": True
-                }
-            }
-            
-            response = requests.post(
-                self.api_url,
-                headers=self.headers,
-                json=payload,
-                timeout=30
-            )
-            
-            processing_time = time.time() - start_time
-            
-            if response.status_code == 200:
-                result = response.json()
-                if isinstance(result, list) and len(result) > 0:
-                    answer = result[0].get('generated_text', '')
-                    # Extract only the answer part
-                    if 'Answer:' in answer:
-                        answer = answer.split('Answer:')[-1].strip()
-                    return True, answer, processing_time
+        # Try up to 2 times for better reliability
+        for attempt in range(2):
+            try:
+                # Prepare prompt with context
+                if context:
+                    prompt = f"Context: {context}\n\nQuestion: {question}\n\nAnswer:"
                 else:
-                    return False, "AI temporarily unavailable", processing_time
-            
-            elif response.status_code == 503:
-                # Model is loading, this is normal for Hugging Face
-                logger.info("Hugging Face model is loading, this is normal")
-                return False, "AI model is loading, please try again in a moment", processing_time
-            else:
-                logger.error(f"Hugging Face API error: {response.status_code} - {response.text}")
-                return False, "AI temporarily unavailable", processing_time
+                    prompt = f"Question: {question}\n\nAnswer:"
                 
-        except requests.exceptions.Timeout:
-            processing_time = time.time() - start_time
-            logger.error("Hugging Face API timeout")
-            return False, "AI temporarily unavailable", processing_time
-            
-        except requests.exceptions.RequestException as e:
-            processing_time = time.time() - start_time
-            logger.error(f"Hugging Face API request error: {str(e)}")
-            return False, "AI temporarily unavailable", processing_time
-            
-        except Exception as e:
-            processing_time = time.time() - start_time
-            logger.error(f"Unexpected error in Hugging Face API: {str(e)}")
-            return False, "AI temporarily unavailable", processing_time
+                payload = {
+                    "inputs": prompt,
+                    "parameters": {
+                        "max_new_tokens": 500,
+                        "temperature": 0.7,
+                        "top_p": 0.9,
+                        "do_sample": True
+                    }
+                }
+                
+                response = requests.post(
+                    self.api_url,
+                    headers=self.headers,
+                    json=payload,
+                    timeout=30
+                )
+                
+                processing_time = time.time() - start_time
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if isinstance(result, list) and len(result) > 0:
+                        answer = result[0].get('generated_text', '')
+                        # Extract only the answer part
+                        if 'Answer:' in answer:
+                            answer = answer.split('Answer:')[-1].strip()
+                        return True, answer, processing_time
+                    else:
+                        return False, "AI temporarily unavailable", processing_time
+                
+                elif response.status_code == 503:
+                    # Model is loading, this is normal for Hugging Face
+                    logger.info(f"Hugging Face model is loading (attempt {attempt + 1}/2)")
+                    if attempt == 1:  # Last attempt
+                        return False, "AI model is loading, please try again in a moment", processing_time
+                    time.sleep(2)  # Wait 2 seconds before retry
+                    continue
+                    
+                elif response.status_code == 429:
+                    # Rate limit exceeded
+                    logger.warning(f"Hugging Face API rate limit exceeded (attempt {attempt + 1}/2)")
+                    if attempt == 1:  # Last attempt
+                        return False, "AI service is temporarily busy, please try again in a few moments", processing_time
+                    time.sleep(3)  # Wait 3 seconds before retry
+                    continue
+                    
+                else:
+                    logger.error(f"Hugging Face API error: {response.status_code} - {response.text}")
+                    return False, "AI temporarily unavailable", processing_time
+                    
+            except requests.exceptions.Timeout:
+                processing_time = time.time() - start_time
+                logger.error(f"Hugging Face API timeout (attempt {attempt + 1}/2)")
+                if attempt == 1:  # Last attempt
+                    return False, "AI temporarily unavailable", processing_time
+                time.sleep(2)  # Wait before retry
+                continue
+                
+            except requests.exceptions.RequestException as e:
+                processing_time = time.time() - start_time
+                logger.error(f"Hugging Face API request error: {str(e)} (attempt {attempt + 1}/2)")
+                if attempt == 1:  # Last attempt
+                    return False, "AI temporarily unavailable", processing_time
+                time.sleep(2)  # Wait before retry
+                continue
+                
+            except Exception as e:
+                processing_time = time.time() - start_time
+                logger.error(f"Unexpected error in Hugging Face API: {str(e)} (attempt {attempt + 1}/2)")
+                if attempt == 1:  # Last attempt
+                    return False, "AI temporarily unavailable", processing_time
+                time.sleep(2)  # Wait before retry
+                continue
+        
+        # If we get here, all attempts failed
+        processing_time = time.time() - start_time
+        return False, "AI temporarily unavailable", processing_time
     
     def generate_quiz_questions(self, topic: str, resource_content: str = "", num_questions: int = 5) -> Tuple[bool, List[Dict], float]:
         """
