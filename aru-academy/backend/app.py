@@ -31,14 +31,13 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     
-    # Ensure database is seeded when app is created (for production deployment)
+    # Initialize database tables
     with app.app_context():
         try:
             db.create_all()
-            seed_database_if_empty()
         except Exception as e:
-            print(f"⚠️  Database seeding warning: {e}")
-            # Don't fail the app startup if seeding fails
+            print(f"⚠️  Database initialization warning: {e}")
+            # Don't fail the app startup if database creation fails
     
     # JWT setup
     jwt = JWTManager(app)
@@ -842,9 +841,23 @@ def force_seed_database():
         db.session.rollback()
         raise
 
-if __name__ == '__main__':
+def initialize_app():
+    """Initialize the app with database seeding"""
     with app.app_context():
-        db.create_all()
-        seed_database_if_empty()
+        try:
+            db.create_all()
+            seed_database_if_empty()
+        except Exception as e:
+            print(f"⚠️  Database seeding warning: {e}")
+
+if __name__ == '__main__':
+    initialize_app()
     app.run(debug=True, host='0.0.0.0', port=8000)
+else:
+    # For Gunicorn/production deployment, seed immediately
+    try:
+        with app.app_context():
+            seed_database_if_empty()
+    except Exception as e:
+        print(f"⚠️  Database seeding warning: {e}")
 
