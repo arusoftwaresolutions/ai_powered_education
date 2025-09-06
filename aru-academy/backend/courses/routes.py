@@ -16,8 +16,11 @@ course_service = CourseService()
 def get_courses():
     """Get courses based on user role and department"""
     try:
+        # Ensure clean session state
+        db.session.rollback()
+        
         user_id = int(get_jwt_identity())
-        user = User.query.get(int(user_id))
+        user = db.session.get(User, int(user_id))
         
         if not user:
             return jsonify({'error': 'User not found'}), 404
@@ -36,15 +39,20 @@ def get_courses():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        db.session.rollback()
+        print(f"❌ Error in get_courses: {str(e)}")
+        return jsonify({'error': 'Failed to fetch courses'}), 500
 
 @courses_bp.route('/ai-tutor', methods=['GET'])
 @jwt_required()
 def get_courses_for_ai_tutor():
     """Get courses for AI tutor dropdown (simplified data)"""
     try:
+        # Ensure clean session state
+        db.session.rollback()
+        
         user_id = int(get_jwt_identity())
-        user = User.query.get(int(user_id))
+        user = db.session.get(User, int(user_id))
         
         if not user:
             return jsonify({'error': 'User not found'}), 404

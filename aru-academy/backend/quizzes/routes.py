@@ -16,8 +16,11 @@ quiz_service = QuizService()
 def get_quizzes():
     """Get quizzes based on user role and department"""
     try:
+        # Ensure clean session state
+        db.session.rollback()
+        
         user_id = int(get_jwt_identity())
-        user = User.query.get(int(user_id))
+        user = db.session.get(User, int(user_id))
         
         if not user:
             return jsonify({'error': 'User not found'}), 404
@@ -34,7 +37,9 @@ def get_quizzes():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        db.session.rollback()
+        print(f"❌ Error in get_quizzes: {str(e)}")
+        return jsonify({'error': 'Failed to fetch quizzes'}), 500
 
 @quizzes_bp.route('/<int:quiz_id>', methods=['GET'])
 @jwt_required()
