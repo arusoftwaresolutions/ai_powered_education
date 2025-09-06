@@ -438,7 +438,7 @@
 
         // Create quiz functionality
         document.getElementById('createQuizBtn').addEventListener('click', function() {
-            document.getElementById('createQuizModal').style.display = 'block';
+            document.getElementById('createQuizModal').classList.add('show');
             document.body.classList.add('modal-open');
         });
 
@@ -486,12 +486,12 @@
 
         // Modal close functionality
         document.getElementById('closeCreateModal').addEventListener('click', function() {
-            document.getElementById('createQuizModal').style.display = 'none';
+            document.getElementById('createQuizModal').classList.remove('show');
             document.body.classList.remove('modal-open');
         });
 
         document.getElementById('cancelCreate').addEventListener('click', function() {
-            document.getElementById('createQuizModal').style.display = 'none';
+            document.getElementById('createQuizModal').classList.remove('show');
             document.body.classList.remove('modal-open');
         });
 
@@ -523,7 +523,7 @@
                 
                 // Show quiz modal
                 document.getElementById('quizModalTitle').textContent = currentQuiz.title;
-                document.getElementById('quizModal').style.display = 'block';
+                document.getElementById('quizModal').classList.add('show');
                 document.body.classList.add('modal-open');
                 
             } catch (error) {
@@ -679,7 +679,7 @@
                     showQuizResults(response.data.submission);
                     
                     // Close quiz modal
-                    document.getElementById('quizModal').style.display = 'none';
+                    document.getElementById('quizModal').classList.remove('show');
                     document.body.classList.remove('modal-open');
                     
                     // Refresh quizzes list
@@ -725,7 +725,7 @@
             `;
             
             resultsContent.innerHTML = resultsHTML;
-            document.getElementById('resultsModal').style.display = 'block';
+            document.getElementById('resultsModal').classList.add('show');
             document.body.classList.add('modal-open');
         }
 
@@ -756,7 +756,7 @@
                     clearInterval(quizTimer);
                     quizTimer = null;
                 }
-                document.getElementById('quizModal').style.display = 'none';
+                    document.getElementById('quizModal').classList.remove('show');
                 document.body.classList.remove('modal-open');
                 currentQuiz = null;
                 currentQuestionIndex = 0;
@@ -766,7 +766,7 @@
 
         // Close results modal
         document.getElementById('closeResultsModal').addEventListener('click', function() {
-            document.getElementById('resultsModal').style.display = 'none';
+            document.getElementById('resultsModal').classList.remove('show');
             document.body.classList.remove('modal-open');
         });
 
@@ -1021,12 +1021,13 @@
         document.getElementById('logoutBtn').addEventListener('click', async function(e) {
             e.preventDefault();
             try {
-                await api.post('/api/auth/logout');
-                localStorage.removeItem('user');
-                localStorage.removeItem('token');
+                // Use the auth service for proper logout
+                const authService = new AuthService();
+                await authService.logout();
                 window.location.href = 'login.html';
             } catch (error) {
                 console.error('Logout error:', error);
+                // Force logout anyway
                 localStorage.removeItem('user');
                 localStorage.removeItem('token');
                 window.location.href = 'login.html';
@@ -1048,7 +1049,7 @@
         // Import Quiz functionality
         function showImportQuizModal() {
             const modal = document.getElementById('importQuizModal');
-            modal.style.display = 'block';
+            modal.classList.add('show');
             document.body.classList.add('modal-open');
             
             // Courses are already loaded by loadUserCourses() on page load
@@ -1056,7 +1057,7 @@
 
         function hideImportQuizModal() {
             const modal = document.getElementById('importQuizModal');
-            modal.style.display = 'none';
+            modal.classList.remove('show');
             document.body.classList.remove('modal-open');
         }
 

@@ -762,7 +762,9 @@
         document.getElementById('logoutBtn').addEventListener('click', async function(e) {
             e.preventDefault();
             try {
-                await api.post('/api/auth/logout');
+                // Use the auth service for proper logout
+                const authService = new AuthService();
+                await authService.logout();
                 localStorage.removeItem('user');
                 localStorage.removeItem('token');
                 window.location.href = 'login.html';

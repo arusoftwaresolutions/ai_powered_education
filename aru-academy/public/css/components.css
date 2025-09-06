@@ -1772,7 +1772,8 @@
 
 /* Modal */
 .modal, .modal-overlay {
-    display: flex;
+    visibility: hidden;
+    opacity: 0;
     position: fixed;
     top: 0;
     left: 0;
@@ -1780,14 +1781,15 @@
     height: 100%;
     background: rgba(0,0,0,0.5);
     z-index: 1000;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal.active {
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal.active, .modal.show {
+    visibility: visible;
+    opacity: 1;
 }
 
 .modal-content {

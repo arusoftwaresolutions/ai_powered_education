@@ -198,7 +198,7 @@ class CoursesService {
                     <span class="progress-text">${progressPercentage}% Complete</span>
                 </div>
                 <div class="course-actions">
-                    <button class="btn btn-primary" onclick="coursesService.openCourseContent(${course.id})">📚 Open Course</button>
+                    <button class="btn btn-primary" onclick="coursesService.openCourseContent(${course.id})">Open Course Content</button>
                     ${this.getCourseActionButtons(course)}
                 </div>
             </div>
@@ -213,7 +213,7 @@ class CoursesService {
         const userRole = user.role;
 
         // Add View Resources button for all users
-        const viewResourcesBtn = `<button class="btn btn-secondary btn-sm" onclick="coursesService.viewCourseResources(${course.id})">📁 Browse Resources</button>`;
+        const viewResourcesBtn = `<button class="btn btn-secondary btn-sm" onclick="coursesService.viewCourseResources(${course.id})">Browse Resources</button>`;
 
         if (userRole === 'Instructor' || userRole === 'Admin') {
             return `
@@ -297,7 +297,7 @@ class CoursesService {
     showCreateCourseModal() {
         const modal = document.getElementById('createCourseModal');
         if (modal) {
-            modal.style.display = 'block';
+            modal.classList.add('show');
             document.body.classList.add('modal-open');
         }
     }
@@ -319,7 +319,7 @@ class CoursesService {
     showUploadResourceModal() {
         const modal = document.getElementById('uploadResourceModal');
         if (modal) {
-            modal.style.display = 'block';
+            modal.classList.add('show');
             document.body.classList.add('modal-open');
             this.loadUserCourses();
         }
