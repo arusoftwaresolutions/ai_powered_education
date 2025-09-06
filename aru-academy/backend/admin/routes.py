@@ -25,37 +25,27 @@ def require_admin(f):
         try:
             user_id = int(get_jwt_identity())
             
-            # Create a fresh session to avoid connection issues
+            # Use a simpler approach with proper error handling
             from models.base import db
-            from sqlalchemy.orm import sessionmaker
             
-            # Force close any existing problematic connections
+            # Rollback any existing transaction
             try:
-                db.session.close()
+                db.session.rollback()
             except:
                 pass
             
-            # Create a new session
-            Session = sessionmaker(bind=db.engine)
-            session = Session()
-            
+            # Get user with proper error handling
             try:
-                user = session.get(User, user_id)
+                user = db.session.get(User, user_id)
                 
                 if not user or user.role != UserRole.ADMIN:
                     return jsonify({'error': 'Admin access required'}), 403
                 
-                # Store the session in the request context for use in the route
-                from flask import g
-                g.db_session = session
-                
                 return f(*args, **kwargs)
-            finally:
-                # Clean up the session
-                try:
-                    session.close()
-                except:
-                    pass
+            except Exception as db_error:
+                print(f"❌ Database error in admin auth: {str(db_error)}")
+                db.session.rollback()
+                return jsonify({'error': 'Database error'}), 500
                     
         except Exception as e:
             print(f"❌ Admin auth error: {str(e)}")

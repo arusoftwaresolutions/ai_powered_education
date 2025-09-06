@@ -65,7 +65,7 @@
                 </div>
 
                 <!-- Quiz Navigation -->
-                <div class="quiz-nav">
+                <div class="quiz-nav" style="margin-top: 2rem;">
                     <button class="nav-btn active" data-tab="available">Available Quizzes</button>
                     <button class="nav-btn" data-tab="history">Quiz History</button>
                     <button class="nav-btn" data-tab="results">Results & Analytics</button>
@@ -285,6 +285,50 @@
         </div>
     </div>
 
+    <!-- Import Quiz Modal -->
+    <div class="modal" id="importQuizModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Import Quiz</h3>
+                <button class="modal-close" id="closeImportModal">&times;</button>
+            </div>
+            <form id="importQuizForm">
+                <div class="form-group">
+                    <label for="importQuizFile">Quiz File</label>
+                    <input type="file" id="importQuizFile" name="file" accept=".json,.csv,.txt" required>
+                    <small class="form-text">Supported formats: JSON, CSV, TXT</small>
+                </div>
+                <div class="form-group">
+                    <label for="importQuizCourse">Target Course</label>
+                    <select id="importQuizCourse" name="course_id" required>
+                        <option value="">Select Course</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="importQuizTitle">Quiz Title</label>
+                    <input type="text" id="importQuizTitle" name="title" placeholder="Enter quiz title (optional)">
+                    <small class="form-text">Leave empty to use title from file</small>
+                </div>
+                <div class="form-group">
+                    <label for="importQuizDescription">Description</label>
+                    <textarea id="importQuizDescription" name="description" rows="3" placeholder="Enter quiz description (optional)"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="importQuizDifficulty">Difficulty Level</label>
+                    <select id="importQuizDifficulty" name="difficulty" required>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate" selected>Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelImport">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Import Quiz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -315,6 +359,7 @@
     <script src="js/ui.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
+    <script src="js/quizzes.js"></script>
     <script>
         // Check authentication
         if (!localStorage.getItem('user')) {
@@ -397,6 +442,11 @@
             document.body.classList.add('modal-open');
         });
 
+        // Import quiz functionality
+        document.getElementById('importQuizBtn').addEventListener('click', function() {
+            showImportQuizModal();
+        });
+
         // Create quiz form submission
         document.getElementById('createQuizForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -446,24 +496,42 @@
         });
 
         // Quiz taking functionality
-        function startQuiz(quiz) {
-            currentQuiz = quiz;
-            currentQuestionIndex = 0;
-            quizAnswers = {};
-            
-            // Set up timer if applicable
-            if (quiz.time_limit) {
-                timeRemaining = quiz.time_limit * 60; // Convert to seconds
-                startQuizTimer();
+        async function startQuiz(quiz) {
+            try {
+                showLoading();
+                
+                // Fetch complete quiz data with questions
+                const response = await api.get(`/api/quizzes/${quiz.id}`);
+                
+                if (!response.success) {
+                    showAlert('Failed to load quiz questions', 'error');
+                    return;
+                }
+                
+                currentQuiz = response.data.quiz;
+                currentQuestionIndex = 0;
+                quizAnswers = {};
+                
+                // Set up timer if applicable
+                if (currentQuiz.time_limit) {
+                    timeRemaining = currentQuiz.time_limit * 60; // Convert to seconds
+                    startQuizTimer();
+                }
+                
+                // Load first question
+                loadQuizQuestion();
+                
+                // Show quiz modal
+                document.getElementById('quizModalTitle').textContent = currentQuiz.title;
+                document.getElementById('quizModal').style.display = 'block';
+                document.body.classList.add('modal-open');
+                
+            } catch (error) {
+                console.error('Error loading quiz:', error);
+                showAlert('An error occurred while loading the quiz', 'error');
+            } finally {
+                hideLoading();
             }
-            
-            // Load first question
-            loadQuizQuestion();
-            
-            // Show quiz modal
-            document.getElementById('quizModalTitle').textContent = quiz.title;
-            document.getElementById('quizModal').style.display = 'block';
-            document.body.classList.add('modal-open');
         }
 
         function loadQuizQuestion() {
@@ -584,9 +652,18 @@
             try {
                 showLoading();
                 
+                // Convert answers to use question IDs as keys
+                const formattedAnswers = {};
+                for (let i = 0; i < currentQuiz.questions.length; i++) {
+                    const question = currentQuiz.questions[i];
+                    if (i in quizAnswers) {
+                        formattedAnswers[question.id] = quizAnswers[i];
+                    }
+                }
+                
                 const submissionData = {
                     quiz_id: currentQuiz.id,
-                    answers: quizAnswers
+                    answers: formattedAnswers
                 };
 
                 const response = await api.post(`/api/quizzes/${currentQuiz.id}/submit`, submissionData);
@@ -599,7 +676,7 @@
                     }
 
                     // Show results
-                    showQuizResults(response.data);
+                    showQuizResults(response.data.submission);
                     
                     // Close quiz modal
                     document.getElementById('quizModal').style.display = 'none';
@@ -618,36 +695,32 @@
             }
         }
 
-        function showQuizResults(results) {
+        function showQuizResults(submission) {
             const resultsContent = document.getElementById('resultsContent');
+            
+            const percentage = Math.round((submission.score / submission.max_score) * 100);
+            const passed = percentage >= 70; // Assuming 70% passing score
             
             const resultsHTML = `
                 <div class="results-summary">
                     <div class="result-score">
                         <h4>Your Score</h4>
                         <div class="score-display">
-                            <span class="score-number">${results.score}</span>
-                            <span class="score-max">/ ${results.max_score}</span>
+                            <span class="score-number">${submission.score}</span>
+                            <span class="score-max">/ ${submission.max_score}</span>
                         </div>
-                        <div class="score-percentage">${Math.round((results.score / results.max_score) * 100)}%</div>
+                        <div class="score-percentage">${percentage}%</div>
                     </div>
                     <div class="result-status">
-                        <span class="status-badge ${results.score >= results.passing_score ? 'passed' : 'failed'}">
-                            ${results.score >= results.passing_score ? 'PASSED' : 'FAILED'}
+                        <span class="status-badge ${passed ? 'passed' : 'failed'}">
+                            ${passed ? 'PASSED' : 'FAILED'}
                         </span>
                     </div>
                 </div>
                 <div class="results-breakdown">
-                    <h5>Question Breakdown</h5>
-                    <div class="breakdown-list">
-                        ${results.question_results.map((qResult, index) => `
-                            <div class="breakdown-item ${qResult.correct ? 'correct' : 'incorrect'}">
-                                <span class="question-number">Q${index + 1}</span>
-                                <span class="question-result">${qResult.correct ? '✓' : '✗'}</span>
-                                <span class="question-points">${qResult.points} pts</span>
-                            </div>
-                        `).join('')}
-                    </div>
+                    <h5>Quiz Completed</h5>
+                    <p>You scored ${submission.score} out of ${submission.max_score} points (${percentage}%).</p>
+                    <p>Submitted on: ${new Date(submission.submitted_at).toLocaleString()}</p>
                 </div>
             `;
             
@@ -951,6 +1024,89 @@
                 document.getElementById('userMenu').classList.remove('show');
             }
         });
+
+        // Import Quiz functionality
+        function showImportQuizModal() {
+            const modal = document.getElementById('importQuizModal');
+            modal.style.display = 'block';
+            document.body.classList.add('modal-open');
+            
+            // Load courses for the dropdown
+            loadCoursesForImport();
+        }
+
+        function hideImportQuizModal() {
+            const modal = document.getElementById('importQuizModal');
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+        async function loadCoursesForImport() {
+            try {
+                const response = await api.get('/api/courses/');
+                if (response.success) {
+                    const courseSelect = document.getElementById('importQuizCourse');
+                    courseSelect.innerHTML = '<option value="">Select Course</option>';
+                    response.data.forEach(course => {
+                        const option = document.createElement('option');
+                        option.value = course.id;
+                        option.textContent = course.title;
+                        courseSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading courses for import:', error);
+            }
+        }
+
+        // Import quiz form submission
+        document.getElementById('importQuizForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const file = formData.get('file');
+            
+            if (!file) {
+                showAlert('Please select a quiz file to import', 'error');
+                return;
+            }
+
+            try {
+                showLoading();
+                
+                // Create FormData for file upload
+                const uploadData = new FormData();
+                uploadData.append('file', file);
+                uploadData.append('course_id', formData.get('course_id'));
+                uploadData.append('title', formData.get('title'));
+                uploadData.append('description', formData.get('description'));
+                uploadData.append('difficulty', formData.get('difficulty'));
+
+                const response = await api.post('/api/quizzes/import', uploadData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                if (response.success) {
+                    showAlert('Quiz imported successfully!', 'success');
+                    hideImportQuizModal();
+                    this.reset();
+                    loadAvailableQuizzes();
+                } else {
+                    showAlert(response.message || 'Failed to import quiz', 'error');
+                }
+            } catch (error) {
+                console.error('Error importing quiz:', error);
+                showAlert('An error occurred while importing the quiz', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Import modal close functionality
+        document.getElementById('closeImportModal').addEventListener('click', hideImportQuizModal);
+        document.getElementById('cancelImport').addEventListener('click', hideImportQuizModal);
         
         // Initialize quizzes service and load quizzes
         const quizzesService = new QuizzesService();

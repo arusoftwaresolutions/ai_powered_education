@@ -107,11 +107,11 @@
                         <div class="stat-card modern-card">
                             <div class="stat-header">
                                 <div class="stat-icon">🎯</div>
-                                <div class="stat-trend positive">85%</div>
+                                <div class="stat-trend positive" id="progressTrend">0%</div>
                             </div>
                             <div class="stat-content">
                                 <h3>Learning Progress</h3>
-                                <span class="stat-number">85%</span>
+                                <span class="stat-number" id="overallProgress">0%</span>
                                 <p class="stat-description">Overall completion</p>
                             </div>
                         </div>
@@ -205,9 +205,9 @@
                             </div>
                             <div class="card-content">
                                 <div class="action-buttons">
-                                    <a href="courses.html?action=create" class="btn btn-primary">Create Course</a>
-                                    <a href="courses.html?action=upload" class="btn btn-outline">Upload Resource</a>
-                                    <a href="quizzes.html?action=create" class="btn btn-outline">Create Quiz</a>
+                                    <button class="btn btn-primary" onclick="handleCreateCourse()">Create Course</button>
+                                    <button class="btn btn-outline" onclick="handleUploadResource()">Upload Resource</button>
+                                    <button class="btn btn-outline" onclick="handleCreateQuiz()">Create Quiz</button>
                                 </div>
                             </div>
                         </div>
@@ -388,23 +388,83 @@
                 ]);
 
                 if (courses.success) {
-                    document.getElementById('enrolledCourses').textContent = courses.data.length;
-                    const completed = courses.data.filter(c => c.progress === 100).length;
+                    // Filter courses by user's department
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    let userCourses = courses.data;
+                    
+                    if (user.department_id) {
+                        userCourses = courses.data.filter(course => 
+                            course.department_id === user.department_id
+                        );
+                    }
+                    
+                    document.getElementById('enrolledCourses').textContent = userCourses.length;
+                    const completed = userCourses.filter(c => c.progress === 100).length;
                     document.getElementById('completedCourses').textContent = completed;
+                    
+                    // Calculate overall progress
+                    let overallProgress = 0;
+                    if (userCourses.length > 0) {
+                        const totalProgress = userCourses.reduce((sum, course) => sum + (course.progress || 0), 0);
+                        overallProgress = Math.round(totalProgress / userCourses.length);
+                    }
+                    
+                    document.getElementById('overallProgress').textContent = overallProgress + '%';
+                    document.getElementById('progressTrend').textContent = overallProgress + '%';
+                    
+                    // Update progress trend color based on value
+                    const progressTrend = document.getElementById('progressTrend');
+                    if (overallProgress >= 80) {
+                        progressTrend.className = 'stat-trend positive';
+                    } else if (overallProgress >= 50) {
+                        progressTrend.className = 'stat-trend warning';
+                    } else {
+                        progressTrend.className = 'stat-trend negative';
+                    }
                 }
 
                 if (progress.success && progress.data.length > 0) {
-                    const recent = progress.data.slice(0, 3);
-                    document.getElementById('recentProgress').innerHTML = recent.map(p => 
-                        `<div class="progress-item">
-                            <span>${p.resource_title}</span>
-                            <span class="badge badge-${p.status === 'Completed' ? 'success' : 'warning'}">${p.status}</span>
-                        </div>`
-                    ).join('');
+                    // Filter progress by user's department
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    let userProgress = progress.data;
+                    
+                    if (user.department_id) {
+                        userProgress = progress.data.filter(p => 
+                            p.course && p.course.department_id === user.department_id
+                        );
+                    }
+                    
+                    const recent = userProgress.slice(0, 3);
+                    if (recent.length > 0) {
+                        document.getElementById('recentProgress').innerHTML = recent.map(p => 
+                            `<div class="progress-item">
+                                <span>${p.resource_title}</span>
+                                <span class="badge badge-${p.status === 'Completed' ? 'success' : 'warning'}">${p.status}</span>
+                            </div>`
+                        ).join('');
+                    } else {
+                        document.getElementById('recentProgress').innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">📊</div>
+                                <p>No recent progress to display.</p>
+                                <button class="btn btn-primary btn-sm">Start Learning</button>
+                            </div>
+                        `;
+                    }
                 }
 
                 if (quizzes.success) {
-                    const upcoming = quizzes.data.filter(q => new Date(q.created_at) > new Date()).slice(0, 3);
+                    // Filter quizzes by user's department
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    let userQuizzes = quizzes.data;
+                    
+                    if (user.department_id) {
+                        userQuizzes = quizzes.data.filter(q => 
+                            q.course && q.course.department_id === user.department_id
+                        );
+                    }
+                    
+                    const upcoming = userQuizzes.filter(q => new Date(q.created_at) > new Date()).slice(0, 3);
                     if (upcoming.length > 0) {
                         document.getElementById('upcomingQuizzes').innerHTML = upcoming.map(q =>
                             `<div class="quiz-item">
@@ -412,6 +472,14 @@
                                 <span class="badge badge-info">${q.course_title}</span>
                             </div>`
                         ).join('');
+                    } else {
+                        document.getElementById('upcomingQuizzes').innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">📋</div>
+                                <p>No upcoming quizzes.</p>
+                                <button class="btn btn-primary btn-sm">Take Quiz</button>
+                            </div>
+                        `;
                     }
                 }
 
@@ -424,6 +492,9 @@
                 document.getElementById('enrolledCourses').textContent = '0';
                 document.getElementById('completedCourses').textContent = '0';
                 document.getElementById('aiQuestionsAsked').textContent = '0';
+                document.getElementById('overallProgress').textContent = '0%';
+                document.getElementById('progressTrend').textContent = '0%';
+                document.getElementById('progressTrend').className = 'stat-trend negative';
             }
         }
 
@@ -489,6 +560,66 @@
         // Initialize dashboard
         loadDashboardData();
 
+        // Add event listeners for dashboard action buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.textContent === 'Start Learning') {
+                e.preventDefault();
+                handleStartLearning();
+            } else if (e.target.textContent === 'Take Quiz') {
+                e.preventDefault();
+                handleTakeQuiz();
+            }
+        });
+
+        // Handle Start Learning button click
+        async function handleStartLearning() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (!user.department_id) {
+                    showAlert('Unable to determine your department. Please contact support.', 'error');
+                    return;
+                }
+
+                // Redirect to courses page - it will automatically filter by department
+                window.location.href = 'courses.html';
+            } catch (error) {
+                console.error('Error handling start learning:', error);
+                showAlert('An error occurred. Please try again.', 'error');
+            }
+        }
+
+        // Handle Take Quiz button click
+        async function handleTakeQuiz() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (!user.department_id) {
+                    showAlert('Unable to determine your department. Please contact support.', 'error');
+                    return;
+                }
+
+                // Check if there are available quizzes for the user's department
+                const response = await api.get('/api/quizzes/');
+                if (response.success && response.data && response.data.length > 0) {
+                    // Filter quizzes by user's department
+                    const departmentQuizzes = response.data.filter(quiz => 
+                        quiz.course && quiz.course.department_id === user.department_id
+                    );
+                    
+                    if (departmentQuizzes.length > 0) {
+                        // Redirect to quizzes page
+                        window.location.href = 'quizzes.html';
+                    } else {
+                        showAlert('No quizzes are currently available for your department. Check back later!', 'info');
+                    }
+                } else {
+                    showAlert('No quizzes are currently available. Check back later!', 'info');
+                }
+            } catch (error) {
+                console.error('Error handling take quiz:', error);
+                showAlert('An error occurred while checking for quizzes. Please try again.', 'error');
+            }
+        }
+
         // Logout functionality
         document.getElementById('logoutBtn').addEventListener('click', async function(e) {
             e.preventDefault();
@@ -517,6 +648,261 @@
                 document.getElementById('userMenu').classList.remove('show');
             }
         });
+
+        // Instructor action functions
+        function handleCreateCourse() {
+            // Create a modal for course creation
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Create New Course</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createCourseForm">
+                            <div class="form-group">
+                                <label for="courseTitle">Course Title</label>
+                                <input type="text" id="courseTitle" name="title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="courseDescription">Description</label>
+                                <textarea id="courseDescription" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="courseDepartment">Department</label>
+                                <select id="courseDepartment" name="department_id" required>
+                                    <option value="">Select Department</option>
+                                    <option value="1">Computer Science</option>
+                                    <option value="2">Business Administration</option>
+                                    <option value="3">Engineering</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="courseFile">Course Materials</label>
+                                <input type="file" id="courseFile" name="file" multiple accept=".pdf,.doc,.docx,.txt,.mp4,.avi,.mov">
+                                <small class="form-text">Upload course materials (PDF, Word, Text, Video files)</small>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="submitCreateCourse()">Create Course</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function handleUploadResource() {
+            // Create a modal for resource upload
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Upload Course Resource</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="uploadResourceForm">
+                            <div class="form-group">
+                                <label for="resourceCourse">Select Course</label>
+                                <select id="resourceCourse" name="course_id" required>
+                                    <option value="">Select Course</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="resourceTitle">Resource Title</label>
+                                <input type="text" id="resourceTitle" name="title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="resourceType">Resource Type</label>
+                                <select id="resourceType" name="type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="pdf">PDF Document</option>
+                                    <option value="video">Video</option>
+                                    <option value="document">Document</option>
+                                    <option value="text">Text File</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="resourceFile">Upload File</label>
+                                <input type="file" id="resourceFile" name="file" required>
+                                <small class="form-text">Supported formats: PDF, DOC, DOCX, TXT, MP4, AVI, MOV</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="resourceDescription">Description (Optional)</label>
+                                <textarea id="resourceDescription" name="description" rows="2"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="submitUploadResource()">Upload Resource</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Load courses for the dropdown
+            loadCoursesForResource();
+        }
+
+        function handleCreateQuiz() {
+            // Create a modal for quiz creation
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Create New Quiz</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createQuizForm">
+                            <div class="form-group">
+                                <label for="quizTitle">Quiz Title</label>
+                                <input type="text" id="quizTitle" name="title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="quizCourse">Select Course</label>
+                                <select id="quizCourse" name="course_id" required>
+                                    <option value="">Select Course</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="quizDescription">Description</label>
+                                <textarea id="quizDescription" name="description" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="quizQuestions">Number of Questions</label>
+                                <input type="number" id="quizQuestions" name="question_count" min="1" max="20" value="5" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="quizType">Quiz Type</label>
+                                <select id="quizType" name="type" required>
+                                    <option value="mixed">Mixed (Multiple Choice + Short Answer)</option>
+                                    <option value="multiple_choice">Multiple Choice Only</option>
+                                    <option value="short_answer">Short Answer Only</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="submitCreateQuiz()">Create Quiz</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Load courses for the dropdown
+            loadCoursesForQuiz();
+        }
+
+        async function loadCoursesForResource() {
+            try {
+                const response = await api.get('/api/courses/');
+                if (response.success) {
+                    const courseSelect = document.getElementById('resourceCourse');
+                    courseSelect.innerHTML = '<option value="">Select Course</option>';
+                    response.data.forEach(course => {
+                        const option = document.createElement('option');
+                        option.value = course.id;
+                        option.textContent = course.title;
+                        courseSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+
+        async function loadCoursesForQuiz() {
+            try {
+                const response = await api.get('/api/courses/');
+                if (response.success) {
+                    const courseSelect = document.getElementById('quizCourse');
+                    courseSelect.innerHTML = '<option value="">Select Course</option>';
+                    response.data.forEach(course => {
+                        const option = document.createElement('option');
+                        option.value = course.id;
+                        option.textContent = course.title;
+                        courseSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+
+        async function submitCreateCourse() {
+            try {
+                const form = document.getElementById('createCourseForm');
+                const formData = new FormData(form);
+                
+                const response = await api.post('/api/courses/', formData);
+                if (response.success) {
+                    alert('Course created successfully!');
+                    document.querySelector('.modal-overlay').remove();
+                    // Refresh dashboard data
+                    if (userRole === 'Instructor') {
+                        await loadInstructorDashboard();
+                    }
+                } else {
+                    alert('Error creating course: ' + (response.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error creating course:', error);
+                alert('Error creating course. Please try again.');
+            }
+        }
+
+        async function submitUploadResource() {
+            try {
+                const form = document.getElementById('uploadResourceForm');
+                const formData = new FormData(form);
+                
+                const response = await api.post('/api/resources/', formData);
+                if (response.success) {
+                    alert('Resource uploaded successfully!');
+                    document.querySelector('.modal-overlay').remove();
+                    // Refresh dashboard data
+                    if (userRole === 'Instructor') {
+                        await loadInstructorDashboard();
+                    }
+                } else {
+                    alert('Error uploading resource: ' + (response.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error uploading resource:', error);
+                alert('Error uploading resource. Please try again.');
+            }
+        }
+
+        async function submitCreateQuiz() {
+            try {
+                const form = document.getElementById('createQuizForm');
+                const formData = new FormData(form);
+                
+                const response = await api.post('/api/quizzes/', formData);
+                if (response.success) {
+                    alert('Quiz created successfully!');
+                    document.querySelector('.modal-overlay').remove();
+                    // Refresh dashboard data
+                    if (userRole === 'Instructor') {
+                        await loadInstructorDashboard();
+                    }
+                } else {
+                    alert('Error creating quiz: ' + (response.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error creating quiz:', error);
+                alert('Error creating quiz. Please try again.');
+            }
+        }
     </script>
 </body>
 </html>

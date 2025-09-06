@@ -20,9 +20,9 @@ class HuggingFaceProvider:
         
         # Fallback models to try if the primary one fails (prioritizing faster, more reliable models)
         self.fallback_models = [
-            "https://api-inference.huggingface.co/models/google/gemma-2-2b-it",  # Fast and high quality
             "https://api-inference.huggingface.co/models/distilgpt2",  # Fastest and most reliable
             "https://api-inference.huggingface.co/models/gpt2",  # Fast and reliable
+            "https://api-inference.huggingface.co/models/google/gemma-2-2b-it",  # Fast and high quality
             "https://api-inference.huggingface.co/models/microsoft/DialoGPT-small",  # Conversational but slower
             "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium"  # Best quality but slowest
         ]
@@ -70,7 +70,7 @@ class HuggingFaceProvider:
                     self.api_url,
                     headers=self.headers,
                     json=payload,
-                    timeout=15  # Reduced timeout to 15 seconds
+                    timeout=10  # Further reduced timeout to 10 seconds
                 )
                 
                 print(f"🔧 HF Debug - Response status: {response.status_code}")

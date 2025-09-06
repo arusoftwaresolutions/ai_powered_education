@@ -259,4 +259,180 @@ class QuizService:
             'highest_score': max(scores),
             'lowest_score': min(scores)
         }
+    
+    def import_quiz_from_file(self, user: User, file, course_id: int, title: str = '', description: str = '', difficulty: str = 'intermediate') -> Quiz:
+        """Import a quiz from uploaded file"""
+        try:
+            import json
+            import csv
+            import io
+            
+            # Read file content
+            file_content = file.read().decode('utf-8')
+            file_extension = file.filename.split('.')[-1].lower()
+            
+            # Parse file based on extension
+            if file_extension == 'json':
+                quiz_data = self._parse_json_quiz(file_content, title, description, difficulty)
+            elif file_extension == 'csv':
+                quiz_data = self._parse_csv_quiz(file_content, title, description, difficulty)
+            elif file_extension == 'txt':
+                quiz_data = self._parse_txt_quiz(file_content, title, description, difficulty)
+            else:
+                raise ValueError('Unsupported file format. Please use JSON, CSV, or TXT files.')
+            
+            # Set course_id
+            quiz_data['course_id'] = course_id
+            
+            # Create quiz using existing method
+            return self.create_quiz(user, quiz_data)
+            
+        except Exception as e:
+            raise ValueError(f'Failed to import quiz: {str(e)}')
+    
+    def _parse_json_quiz(self, content: str, title: str, description: str, difficulty: str) -> dict:
+        """Parse JSON quiz file"""
+        try:
+            data = json.loads(content)
+            
+            # Extract quiz information
+            quiz_title = title or data.get('title', 'Imported Quiz')
+            quiz_description = description or data.get('description', '')
+            quiz_difficulty = difficulty or data.get('difficulty', 'intermediate')
+            
+            # Parse questions
+            questions = []
+            for q_data in data.get('questions', []):
+                question = {
+                    'type': q_data.get('type', 'multiple_choice'),
+                    'question': q_data.get('question', ''),
+                    'options': q_data.get('options', []),
+                    'answer': q_data.get('answer', ''),
+                    'explanation': q_data.get('explanation', ''),
+                    'points': q_data.get('points', 1)
+                }
+                questions.append(question)
+            
+            return {
+                'title': quiz_title,
+                'description': quiz_description,
+                'difficulty': quiz_difficulty,
+                'topic': data.get('topic', 'General'),
+                'questions': questions
+            }
+            
+        except json.JSONDecodeError as e:
+            raise ValueError(f'Invalid JSON format: {str(e)}')
+    
+    def _parse_csv_quiz(self, content: str, title: str, description: str, difficulty: str) -> dict:
+        """Parse CSV quiz file"""
+        try:
+            csv_reader = csv.DictReader(io.StringIO(content))
+            questions = []
+            
+            for row in csv_reader:
+                question_type = row.get('type', 'multiple_choice')
+                question_text = row.get('question', '')
+                options = row.get('options', '').split('|') if row.get('options') else []
+                answer = row.get('answer', '')
+                explanation = row.get('explanation', '')
+                points = int(row.get('points', 1))
+                
+                question = {
+                    'type': question_type,
+                    'question': question_text,
+                    'options': options,
+                    'answer': answer,
+                    'explanation': explanation,
+                    'points': points
+                }
+                questions.append(question)
+            
+            return {
+                'title': title or 'Imported Quiz',
+                'description': description,
+                'difficulty': difficulty,
+                'topic': 'General',
+                'questions': questions
+            }
+            
+        except Exception as e:
+            raise ValueError(f'Invalid CSV format: {str(e)}')
+    
+    def _parse_txt_quiz(self, content: str, title: str, description: str, difficulty: str) -> dict:
+        """Parse TXT quiz file"""
+        try:
+            lines = content.strip().split('\n')
+            questions = []
+            current_question = None
+            current_options = []
+            current_answer = None
+            current_explanation = None
+            
+            # Extract title if not provided
+            if not title:
+                for line in lines[:5]:  # Check first 5 lines for title
+                    if line.lower().startswith('title:'):
+                        title = line.split(':', 1)[1].strip()
+                        break
+                if not title:
+                    title = 'Imported Quiz'
+            
+            # Parse questions
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                
+                if line.lower().startswith('q') and ':' in line:
+                    # Save previous question
+                    if current_question:
+                        questions.append({
+                            'type': 'multiple_choice' if current_options else 'short_answer',
+                            'question': current_question,
+                            'options': current_options,
+                            'answer': current_answer or '',
+                            'explanation': current_explanation or '',
+                            'points': 1
+                        })
+                    
+                    # Start new question
+                    current_question = line.split(':', 1)[1].strip()
+                    current_options = []
+                    current_answer = None
+                    current_explanation = None
+                
+                elif line.startswith(('A)', 'B)', 'C)', 'D)', 'E)')):
+                    # Option
+                    current_options.append(line[2:].strip())
+                
+                elif line.lower().startswith('correct:'):
+                    # Answer
+                    current_answer = line.split(':', 1)[1].strip()
+                
+                elif line.lower().startswith('explanation:'):
+                    # Explanation
+                    current_explanation = line.split(':', 1)[1].strip()
+            
+            # Add last question
+            if current_question:
+                questions.append({
+                    'type': 'multiple_choice' if current_options else 'short_answer',
+                    'question': current_question,
+                    'options': current_options,
+                    'answer': current_answer or '',
+                    'explanation': current_explanation or '',
+                    'points': 1
+                })
+            
+            return {
+                'title': title,
+                'description': description,
+                'difficulty': difficulty,
+                'topic': 'General',
+                'questions': questions
+            }
+            
+        except Exception as e:
+            raise ValueError(f'Invalid TXT format: {str(e)}')
 

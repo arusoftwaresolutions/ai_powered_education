@@ -23,12 +23,23 @@ class QuizzesService {
 
     async loadQuizzes() {
         try {
-            const response = await API.get('/quizzes');
+            const response = await api.get('/api/quizzes/');
             if (response.success) {
-                this.displayQuizzes(response.data.quizzes);
+                // Filter quizzes by user's department
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                let quizzes = response.data || [];
+                
+                if (user.department_id) {
+                    quizzes = quizzes.filter(quiz => 
+                        quiz.course && quiz.course.department_id === user.department_id
+                    );
+                }
+                
+                this.displayQuizzes(quizzes);
             }
         } catch (error) {
             console.error('Error loading quizzes:', error);
+            this.displayQuizzes([]);
         }
     }
 
@@ -37,7 +48,16 @@ class QuizzesService {
         if (!container) return;
 
         if (quizzes.length === 0) {
-            container.innerHTML = '<p>No quizzes available.</p>';
+            container.innerHTML = `
+                <div class="empty-state" style="text-align: center; padding: 3rem 2rem; color: #666;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">📋</div>
+                    <h3 style="color: #333; margin-bottom: 0.5rem;">No Quizzes Available</h3>
+                    <p style="margin-bottom: 1.5rem;">There are currently no quizzes available for your department. Check back later!</p>
+                    <button class="btn btn-primary" onclick="window.location.href='dashboard.html'">
+                        ← Back to Dashboard
+                    </button>
+                </div>
+            `;
             return;
         }
 

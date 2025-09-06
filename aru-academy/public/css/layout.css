@@ -15,14 +15,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 0;
+    padding: 0.75rem 0; /* Reduced from 1rem to 0.75rem */
 }
 
 .logo h1 {
     color: white;
-    font-size: 1.8rem;
+    font-size: 1.6rem; /* Reduced from 1.8rem to 1.6rem */
     font-weight: bold;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Main content area */
+.main {
+    margin-top: 80px; /* Add margin to prevent overlap with fixed header */
+    min-height: calc(100vh - 80px);
 }
 
 .nav-list {
@@ -373,7 +379,11 @@ section {
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-content {
-        padding: 1rem;
+        padding: 0.75rem; /* Reduced from 1rem to 0.75rem */
+    }
+    
+    .main {
+        margin-top: 70px; /* Slightly less margin on mobile */
     }
     
     .nav-list {

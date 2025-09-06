@@ -106,8 +106,21 @@ class CoursesService {
 
             // Get current filter values
             const search = document.getElementById('searchInput')?.value || '';
-            const department = document.getElementById('departmentFilter')?.value || '';
+            let department = document.getElementById('departmentFilter')?.value || '';
             const status = document.getElementById('statusFilter')?.value || '';
+
+            // Auto-filter by user's department if coming from dashboard
+            if (!department) {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (user.department_id) {
+                    department = user.department_id;
+                    // Set the department filter dropdown
+                    const departmentFilter = document.getElementById('departmentFilter');
+                    if (departmentFilter) {
+                        departmentFilter.value = department;
+                    }
+                }
+            }
 
             // Build query parameters
             const params = new URLSearchParams();
@@ -199,24 +212,32 @@ class CoursesService {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const userRole = user.role;
 
+        // Add View Resources button for all users
+        const viewResourcesBtn = `<button class="btn btn-outline btn-sm" onclick="coursesService.viewCourseResources(${course.id})">📁 View Resources</button>`;
+
         if (userRole === 'Instructor' || userRole === 'Admin') {
             return `
+                ${viewResourcesBtn}
+                <a href="course_detail.html?id=${course.id}" class="btn btn-outline btn-sm">Course Detail</a>
                 <button class="btn btn-outline btn-sm" onclick="coursesService.editCourse(${course.id})">Edit</button>
-                <button class="btn btn-outline btn-sm" onclick="coursesService.manageResources(${course.id})">Resources</button>
+                <button class="btn btn-outline btn-sm" onclick="coursesService.manageResources(${course.id})">Manage</button>
             `;
         }
 
         if (userRole === 'Student') {
-            if (course.progress === 100) {
-                return '<span class="badge badge-success">Completed</span>';
-            } else if (course.progress > 0) {
-                return '<span class="badge badge-warning">In Progress</span>';
-            } else {
-                return '<span class="badge badge-info">Not Started</span>';
-            }
+            const statusBadge = course.progress === 100 ? 
+                '<span class="badge badge-success">Completed</span>' :
+                course.progress > 0 ? 
+                '<span class="badge badge-warning">In Progress</span>' :
+                '<span class="badge badge-info">Not Started</span>';
+            
+            return `
+                ${viewResourcesBtn}
+                ${statusBadge}
+            `;
         }
 
-        return '';
+        return viewResourcesBtn;
     }
 
     /**
@@ -506,6 +527,188 @@ class CoursesService {
      */
     manageResources(courseId) {
         window.location.href = `course_detail.html?id=${courseId}&tab=resources`;
+    }
+
+    /**
+     * View course resources in a modal
+     */
+    async viewCourseResources(courseId) {
+        try {
+            showLoading();
+            
+            // Fetch course details and resources
+            const [courseResponse, resourcesResponse] = await Promise.all([
+                api.get(`/api/courses/${courseId}`),
+                api.get(`/api/resources/?course_id=${courseId}`)
+            ]);
+
+            if (!courseResponse.success) {
+                showAlert('Failed to load course details', 'error');
+                return;
+            }
+
+            const course = courseResponse.data;
+            const resources = resourcesResponse.success ? resourcesResponse.data : [];
+
+            // Create and show resources modal
+            this.showResourcesModal(course, resources);
+            
+        } catch (error) {
+            console.error('Error loading course resources:', error);
+            showAlert('An error occurred while loading course resources', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    /**
+     * Show resources modal
+     */
+    showResourcesModal(course, resources) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
+                <div class="modal-header">
+                    <h3>📚 ${course.title} - Resources</h3>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="course-info" style="margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <p><strong>Description:</strong> ${course.description || 'No description available'}</p>
+                        <p><strong>Department:</strong> ${course.department_name || 'N/A'}</p>
+                        <p><strong>Instructor:</strong> ${course.instructor_name || 'N/A'}</p>
+                    </div>
+                    
+                    <div class="resources-section">
+                        <h4>📁 Course Resources (${resources.length})</h4>
+                        ${this.createResourcesList(resources)}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    /**
+     * Create resources list HTML
+     */
+    createResourcesList(resources) {
+        if (!resources || resources.length === 0) {
+            return `
+                <div class="empty-state" style="text-align: center; padding: 2rem; color: #666;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📄</div>
+                    <h4>No Resources Available</h4>
+                    <p>This course doesn't have any resources yet.</p>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="resources-grid" style="display: grid; gap: 1rem; margin-top: 1rem;">
+                ${resources.map(resource => this.createResourceCard(resource)).join('')}
+            </div>
+        `;
+    }
+
+    /**
+     * Create resource card HTML
+     */
+    createResourceCard(resource) {
+        const typeIcon = this.getResourceTypeIcon(resource.type);
+        const typeColor = this.getResourceTypeColor(resource.type);
+        
+        return `
+            <div class="resource-card" style="border: 1px solid #e1e5e9; border-radius: 8px; padding: 1rem; background: white;">
+                <div class="resource-header" style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                    <span class="resource-icon" style="font-size: 1.5rem; margin-right: 0.5rem;">${typeIcon}</span>
+                    <h5 style="margin: 0; flex: 1;">${resource.title}</h5>
+                    <span class="resource-type-badge" style="background: ${typeColor}; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
+                        ${resource.type}
+                    </span>
+                </div>
+                <div class="resource-content">
+                    ${resource.description ? `<p style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">${resource.description}</p>` : ''}
+                    <div class="resource-actions" style="margin-top: 1rem;">
+                        <button class="btn btn-primary btn-sm" onclick="coursesService.openResource(${resource.id}, '${resource.type}', '${resource.file_path_or_url || ''}', '${resource.title}')">
+                            👁️ View Resource
+                        </button>
+                        ${resource.file_path_or_url ? `
+                            <button class="btn btn-outline btn-sm" onclick="coursesService.downloadResource('${resource.file_path_or_url}', '${resource.title}')">
+                                ⬇️ Download
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Get resource type icon
+     */
+    getResourceTypeIcon(type) {
+        const icons = {
+            'PDF': '📄',
+            'TEXT': '📝',
+            'VIDEO': '🎥',
+            'LINK': '🔗',
+            'DOCUMENT': '📋',
+            'IMAGE': '🖼️'
+        };
+        return icons[type] || '📄';
+    }
+
+    /**
+     * Get resource type color
+     */
+    getResourceTypeColor(type) {
+        const colors = {
+            'PDF': '#dc3545',
+            'TEXT': '#28a745',
+            'VIDEO': '#007bff',
+            'LINK': '#6f42c1',
+            'DOCUMENT': '#fd7e14',
+            'IMAGE': '#20c997'
+        };
+        return colors[type] || '#6c757d';
+    }
+
+    /**
+     * Open resource for viewing
+     */
+    openResource(resourceId, resourceType, filePath, resourceTitle) {
+        if (!filePath) {
+            showAlert('No file path available for this resource', 'error');
+            return;
+        }
+
+        // Open resource in file viewer
+        const viewerUrl = `file-viewer.html?resource_id=${resourceId}&type=${resourceType}&file=${encodeURIComponent(filePath)}&title=${encodeURIComponent(resourceTitle)}`;
+        window.open(viewerUrl, '_blank');
+    }
+
+    /**
+     * Download resource
+     */
+    downloadResource(filePath, fileName) {
+        if (!filePath) {
+            showAlert('No file available for download', 'error');
+            return;
+        }
+
+        // Create download link
+        const link = document.createElement('a');
+        link.href = filePath;
+        link.download = fileName || 'resource';
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     /**

@@ -282,3 +282,55 @@ def get_quiz_history():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@quizzes_bp.route('/import', methods=['POST'])
+@jwt_required()
+def import_quiz():
+    """Import a quiz from file (instructors and admins only)"""
+    try:
+        user_id = int(get_jwt_identity())
+        user = User.query.get(int(user_id))
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        if user.role not in [UserRole.INSTRUCTOR, UserRole.ADMIN]:
+            return jsonify({'error': 'Only instructors and admins can import quizzes'}), 403
+        
+        # Check if file was uploaded
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Get form data
+        course_id = request.form.get('course_id')
+        title = request.form.get('title', '')
+        description = request.form.get('description', '')
+        difficulty = request.form.get('difficulty', 'intermediate')
+        
+        if not course_id:
+            return jsonify({'error': 'Course ID is required'}), 400
+        
+        # Verify course exists and user has access
+        course = Course.query.get(course_id)
+        if not course:
+            return jsonify({'error': 'Course not found'}), 404
+        
+        if user.role == UserRole.INSTRUCTOR and course.created_by != user_id:
+            return jsonify({'error': 'Access denied to this course'}), 403
+        
+        # Import quiz from file
+        quiz = quiz_service.import_quiz_from_file(
+            user, file, course_id, title, description, difficulty
+        )
+        
+        return jsonify({
+            'message': 'Quiz imported successfully',
+            'quiz': quiz.to_dict()
+        }), 201
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+

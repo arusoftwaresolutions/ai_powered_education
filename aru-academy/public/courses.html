@@ -263,6 +263,23 @@
         // Initialize courses service and load courses
         const coursesService = new CoursesService();
         coursesService.loadCourses();
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            try {
+                // Use the auth service for proper logout
+                const authService = new AuthService();
+                await authService.logout();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                // Force logout anyway
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        });
     </script>
 </body>
 </html>
