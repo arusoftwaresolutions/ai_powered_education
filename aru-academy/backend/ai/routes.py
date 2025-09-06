@@ -362,23 +362,33 @@ def ai_status():
         hf_provider = get_hf_provider()
         is_available = hf_provider.is_available()
         
-        if is_available:
-            return jsonify({
-                'status': 'available',
-                'service': 'Hugging Face Inference API',
-                'model': api_url.split('/')[-1] if '/' in api_url else api_url,
-                'fallback_available': True,
-                'message': 'AI service is fully operational'
-            }), 200
-        else:
-            return jsonify({
-                'status': 'fallback',
-                'reason': 'External AI service unavailable - using fallback responses',
-                'service': 'Hugging Face Inference API',
-                'model': api_url.split('/')[-1] if '/' in api_url else api_url,
-                'fallback_available': True,
-                'message': 'AI service is running with helpful fallback responses'
-            }), 200
+        # Get more detailed status information
+        try:
+            # Try a simple test request to get more details
+            test_success, test_response, test_time = hf_provider.ask_question("Hello", "")
+            if test_success:
+                status = 'available'
+                message = 'AI service is fully operational'
+                reason = None
+            else:
+                status = 'fallback'
+                message = 'AI service is running with helpful fallback responses'
+                reason = f'External AI service issue: {test_response}'
+        except Exception as e:
+            status = 'fallback'
+            message = 'AI service is running with helpful fallback responses'
+            reason = f'External AI service error: {str(e)}'
+        
+        return jsonify({
+            'status': status,
+            'reason': reason,
+            'service': 'Hugging Face Inference API',
+            'model': api_url.split('/')[-1] if '/' in api_url else api_url,
+            'fallback_available': True,
+            'message': message,
+            'api_token_configured': bool(api_token),
+            'api_url': api_url
+        }), 200
         
     except Exception as e:
         return jsonify({

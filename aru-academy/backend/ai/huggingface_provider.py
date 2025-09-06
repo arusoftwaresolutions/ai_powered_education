@@ -68,6 +68,10 @@ class HuggingFaceProvider:
                 else:
                     return False, "AI temporarily unavailable", processing_time
             
+            elif response.status_code == 503:
+                # Model is loading, this is normal for Hugging Face
+                logger.info("Hugging Face model is loading, this is normal")
+                return False, "AI model is loading, please try again in a moment", processing_time
             else:
                 logger.error(f"Hugging Face API error: {response.status_code} - {response.text}")
                 return False, "AI temporarily unavailable", processing_time
@@ -241,12 +245,35 @@ class HuggingFaceProvider:
     def is_available(self) -> bool:
         """Check if the Hugging Face API is available"""
         try:
-            response = requests.get(
-                self.api_url.replace('/models/', '/models/'),
+            # Test with a simple request to check if the API is accessible
+            test_payload = {
+                "inputs": "Hello",
+                "parameters": {
+                    "max_new_tokens": 10,
+                    "temperature": 0.1
+                }
+            }
+            
+            response = requests.post(
+                self.api_url,
                 headers=self.headers,
-                timeout=5
+                json=test_payload,
+                timeout=10
             )
-            return response.status_code == 200
-        except:
+            
+            # Check if we get a valid response (200) or if the model is loading (503)
+            if response.status_code == 200:
+                return True
+            elif response.status_code == 503:
+                # Model is loading, but API is available
+                return True
+            else:
+                return False
+                
+        except requests.exceptions.Timeout:
+            return False
+        except requests.exceptions.RequestException:
+            return False
+        except Exception:
             return False
 
