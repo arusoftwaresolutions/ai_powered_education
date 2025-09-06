@@ -198,7 +198,7 @@ class CoursesService {
                     <span class="progress-text">${progressPercentage}% Complete</span>
                 </div>
                 <div class="course-actions">
-                    <a href="course_detail.html?id=${course.id}" class="btn btn-primary">View Course</a>
+                    <button class="btn btn-primary" onclick="coursesService.openCourseContent(${course.id})">📚 Open Course</button>
                     ${this.getCourseActionButtons(course)}
                 </div>
             </div>
@@ -213,7 +213,7 @@ class CoursesService {
         const userRole = user.role;
 
         // Add View Resources button for all users
-        const viewResourcesBtn = `<button class="btn btn-outline btn-sm" onclick="coursesService.viewCourseResources(${course.id})">📁 View Resources</button>`;
+        const viewResourcesBtn = `<button class="btn btn-secondary btn-sm" onclick="coursesService.viewCourseResources(${course.id})">📁 Browse Resources</button>`;
 
         if (userRole === 'Instructor' || userRole === 'Admin') {
             return `
@@ -478,7 +478,6 @@ class CoursesService {
      */
     populateCourseSelects(courses) {
         const courseSelects = [
-            'course_id', // in create course form
             'resourceCourse' // in upload resource form
         ];
         
@@ -530,6 +529,79 @@ class CoursesService {
     }
 
     /**
+     * Open course content directly
+     */
+    async openCourseContent(courseId) {
+        try {
+            showLoading();
+            
+            // Fetch course details and resources
+            const [courseResponse, resourcesResponse] = await Promise.all([
+                api.get(`/api/courses/${courseId}`),
+                api.get(`/api/resources/?course_id=${courseId}`)
+            ]);
+
+            if (!courseResponse.success) {
+                showAlert('Failed to load course details', 'error');
+                return;
+            }
+
+            const course = courseResponse.course || courseResponse.data;
+            const resources = resourcesResponse.success ? (resourcesResponse.resources || resourcesResponse.data || []) : [];
+
+            // If there are resources, open the first one or show resource list
+            if (resources.length > 0) {
+                // Open the first resource in file viewer
+                const firstResource = resources[0];
+                this.openResource(firstResource.id, firstResource.type, firstResource.file_path_or_url || '', firstResource.title);
+            } else {
+                // Show course info modal if no resources
+                this.showCourseInfoModal(course);
+            }
+            
+        } catch (error) {
+            console.error('Error loading course content:', error);
+            showAlert('An error occurred while loading course content', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    /**
+     * Show course info modal when no resources are available
+     */
+    showCourseInfoModal(course) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📚 ${course.title}</h3>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="course-info" style="margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <p><strong>Description:</strong> ${course.description || 'No description available'}</p>
+                        <p><strong>Department:</strong> ${course.department_name || 'N/A'}</p>
+                        <p><strong>Instructor:</strong> ${course.instructor_name || 'N/A'}</p>
+                    </div>
+                    
+                    <div class="empty-state" style="text-align: center; padding: 2rem; color: #666;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📚</div>
+                        <h4>No Resources Available</h4>
+                        <p>This course doesn't have any resources yet.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    /**
      * View course resources in a modal
      */
     async viewCourseResources(courseId) {
@@ -547,8 +619,8 @@ class CoursesService {
                 return;
             }
 
-            const course = courseResponse.data;
-            const resources = resourcesResponse.success ? resourcesResponse.data : [];
+            const course = courseResponse.course || courseResponse.data;
+            const resources = resourcesResponse.success ? (resourcesResponse.resources || resourcesResponse.data || []) : [];
 
             // Create and show resources modal
             this.showResourcesModal(course, resources);

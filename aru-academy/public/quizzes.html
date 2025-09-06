@@ -965,6 +965,12 @@
                 'historyCourseFilter'
             ];
             
+            const courseSelects = [
+                'quizCourse', // Create quiz form
+                'importQuizCourse' // Import quiz form
+            ];
+            
+            // Populate filter dropdowns
             courseFilters.forEach(filterId => {
                 const filter = document.getElementById(filterId);
                 if (filter) {
@@ -974,6 +980,20 @@
                         option.value = course.id;
                         option.textContent = course.title;
                         filter.appendChild(option);
+                    });
+                }
+            });
+            
+            // Populate form dropdowns
+            courseSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    select.innerHTML = '<option value="">Select Course</option>';
+                    courses.forEach(course => {
+                        const option = document.createElement('option');
+                        option.value = course.id;
+                        option.textContent = course.title;
+                        select.appendChild(option);
                     });
                 }
             });
@@ -1031,8 +1051,7 @@
             modal.style.display = 'block';
             document.body.classList.add('modal-open');
             
-            // Load courses for the dropdown
-            loadCoursesForImport();
+            // Courses are already loaded by loadUserCourses() on page load
         }
 
         function hideImportQuizModal() {
@@ -1041,23 +1060,7 @@
             document.body.classList.remove('modal-open');
         }
 
-        async function loadCoursesForImport() {
-            try {
-                const response = await api.get('/api/courses/');
-                if (response.success) {
-                    const courseSelect = document.getElementById('importQuizCourse');
-                    courseSelect.innerHTML = '<option value="">Select Course</option>';
-                    response.data.forEach(course => {
-                        const option = document.createElement('option');
-                        option.value = course.id;
-                        option.textContent = course.title;
-                        courseSelect.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading courses for import:', error);
-            }
-        }
+        // Course loading is handled by loadUserCourses() and populateCourseFilters()
 
         // Import quiz form submission
         document.getElementById('importQuizForm').addEventListener('submit', async function(e) {

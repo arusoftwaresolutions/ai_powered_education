@@ -247,18 +247,8 @@
             document.getElementById('instructorActions').style.display = 'flex';
         }
 
-        // Check URL parameters for actions
-        const urlParams = new URLSearchParams(window.location.search);
-        const action = urlParams.get('action');
-        
-        if (action === 'create') {
-            document.getElementById('createCourseBtn').click();
-        } else if (action === 'upload') {
-            document.getElementById('uploadResourceBtn').click();
-        }
-
-        // Initialize courses page
-        initializeCoursesPage();
+        // URL parameters are handled by the dashboard buttons that redirect here
+        // No automatic popup triggers to prevent unwanted modals
         
         // Initialize courses service and load courses
         const coursesService = new CoursesService();
