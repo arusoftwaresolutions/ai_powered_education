@@ -88,7 +88,7 @@
     flex-wrap: wrap;
 }
 
-.course-actions .btn {
+.course-actions .btn:not(.btn-primary):not(.btn-secondary):not(.btn-outline) {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
@@ -96,7 +96,7 @@
     transition: all 0.3s ease;
 }
 
-.course-actions .btn:hover {
+.course-actions .btn:not(.btn-primary):not(.btn-secondary):not(.btn-outline):hover {
     background: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);

@@ -193,7 +193,7 @@
     </main>
 
     <!-- Create Quiz Modal -->
-    <div class="modal" id="createQuizModal">
+    <div class="modal-overlay" id="createQuizModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Create New Quiz</h3>
@@ -244,7 +244,7 @@
     </div>
 
     <!-- Quiz Taking Modal -->
-    <div class="modal" id="quizModal">
+    <div class="modal-overlay" id="quizModal">
         <div class="modal-content quiz-modal">
             <div class="modal-header">
                 <h3 id="quizModalTitle">Quiz Title</h3>
@@ -269,7 +269,7 @@
     </div>
 
     <!-- Quiz Results Modal -->
-    <div class="modal" id="resultsModal">
+    <div class="modal-overlay" id="resultsModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Quiz Results</h3>
@@ -286,7 +286,7 @@
     </div>
 
     <!-- Import Quiz Modal -->
-    <div class="modal" id="importQuizModal">
+    <div class="modal-overlay" id="importQuizModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Import Quiz</h3>
@@ -469,7 +469,7 @@
 
                 if (response.success) {
                     showAlert('Quiz created successfully!', 'success');
-                    document.getElementById('createQuizModal').style.display = 'none';
+                    document.getElementById('createQuizModal').classList.remove('show');
                     document.body.classList.remove('modal-open');
                     this.reset();
                     loadAvailableQuizzes();
