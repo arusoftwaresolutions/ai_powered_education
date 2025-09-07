@@ -6,6 +6,13 @@ class ResourceType(Enum):
     TEXT = 'text'
     LINK = 'link'
     VIDEO = 'video'
+    DOCUMENT = 'document'  # DOC, DOCX
+    PRESENTATION = 'presentation'  # PPT, PPTX
+    SPREADSHEET = 'spreadsheet'  # XLS, XLSX
+    IMAGE = 'image'  # JPG, PNG, GIF, etc.
+    AUDIO = 'audio'  # MP3, WAV, etc.
+    ARCHIVE = 'archive'  # ZIP, RAR, etc.
+    CODE = 'code'  # JS, PY, HTML, CSS, etc.
 
 class Resource(db.Model, TimestampMixin):
     __tablename__ = 'resources'

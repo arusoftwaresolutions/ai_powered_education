@@ -17,8 +17,65 @@ resource_service = ResourceService()
 
 def allowed_file(filename):
     """Check if file type is allowed"""
-    ALLOWED_EXTENSIONS = {'pdf', 'txt', 'doc', 'docx', 'mp4', 'avi', 'mov'}
+    ALLOWED_EXTENSIONS = {
+        # Documents
+        'pdf', 'txt', 'doc', 'docx', 'rtf',
+        # Presentations
+        'ppt', 'pptx', 'odp',
+        # Spreadsheets
+        'xls', 'xlsx', 'csv', 'ods',
+        # Images
+        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
+        # Videos
+        'mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv',
+        # Audio
+        'mp3', 'wav', 'ogg', 'aac', 'flac',
+        # Archives
+        'zip', 'rar', '7z', 'tar', 'gz',
+        # Code files
+        'js', 'py', 'html', 'css', 'java', 'cpp', 'c', 'php', 'rb', 'go', 'rs',
+        'json', 'xml', 'yaml', 'yml', 'md', 'sql'
+    }
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def get_resource_type_from_extension(filename):
+    """Determine resource type from file extension"""
+    if not filename or '.' not in filename:
+        return ResourceType.TEXT
+    
+    file_ext = filename.rsplit('.', 1)[1].lower()
+    
+    # Document types
+    if file_ext in ['pdf']:
+        return ResourceType.PDF
+    elif file_ext in ['doc', 'docx', 'rtf']:
+        return ResourceType.DOCUMENT
+    elif file_ext in ['ppt', 'pptx', 'odp']:
+        return ResourceType.PRESENTATION
+    elif file_ext in ['xls', 'xlsx', 'csv', 'ods']:
+        return ResourceType.SPREADSHEET
+    elif file_ext in ['txt', 'md']:
+        return ResourceType.TEXT
+    
+    # Media types
+    elif file_ext in ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv']:
+        return ResourceType.VIDEO
+    elif file_ext in ['mp3', 'wav', 'ogg', 'aac', 'flac']:
+        return ResourceType.AUDIO
+    elif file_ext in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp']:
+        return ResourceType.IMAGE
+    
+    # Archive types
+    elif file_ext in ['zip', 'rar', '7z', 'tar', 'gz']:
+        return ResourceType.ARCHIVE
+    
+    # Code types
+    elif file_ext in ['js', 'py', 'html', 'css', 'java', 'cpp', 'c', 'php', 'rb', 'go', 'rs', 'json', 'xml', 'yaml', 'yml', 'sql']:
+        return ResourceType.CODE
+    
+    # Default fallback
+    else:
+        return ResourceType.TEXT
 
 @resources_bp.route('/', methods=['GET'])
 @jwt_required()
@@ -120,14 +177,8 @@ def create_resource():
             file_path = os.path.join(dept_folder, unique_filename)
             file.save(file_path)
             
-            # Determine resource type
-            file_ext = filename.rsplit('.', 1)[1].lower()
-            if file_ext == 'pdf':
-                resource_type = ResourceType.PDF
-            elif file_ext in ['mp4', 'avi', 'mov']:
-                resource_type = ResourceType.VIDEO
-            else:
-                resource_type = ResourceType.TEXT
+            # Determine resource type from file extension
+            resource_type = get_resource_type_from_extension(filename)
             
             resource = Resource(
                 title=request.form.get('title', filename),
@@ -304,17 +355,25 @@ def view_resource(resource_id):
         if not resource:
             return jsonify({'error': 'Resource not found'}), 404
         
-        # Check if file exists
-        if not resource.file_path or not os.path.exists(resource.file_path):
-            return jsonify({'error': 'File not found'}), 404
-        
         # Update progress if student
         if user.role == UserRole.STUDENT:
             resource_service.update_progress(user.id, resource_id, 'in_progress', 50)
         
-        # Return file content
-        from flask import send_file
-        return send_file(resource.file_path, as_attachment=False)
+        # Handle different resource types
+        if resource.type.value == 'text':
+            # For text resources, return the text content
+            from flask import Response
+            return Response(resource.text_content or 'No content available', 
+                          mimetype='text/plain', 
+                          headers={'Content-Disposition': f'inline; filename="{resource.title}.txt"'})
+        else:
+            # For file-based resources (PDF, VIDEO, DOCUMENT, etc.)
+            if not resource.file_path_or_url or not os.path.exists(resource.file_path_or_url):
+                return jsonify({'error': 'File not found'}), 404
+            
+            # Return file content with appropriate MIME type
+            from flask import send_file
+            return send_file(resource.file_path_or_url, as_attachment=False)
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -334,17 +393,25 @@ def download_resource(resource_id):
         if not resource:
             return jsonify({'error': 'Resource not found'}), 404
         
-        # Check if file exists
-        if not resource.file_path or not os.path.exists(resource.file_path):
-            return jsonify({'error': 'File not found'}), 404
-        
         # Update progress if student
         if user.role == UserRole.STUDENT:
             resource_service.update_progress(user.id, resource_id, 'completed', 100)
         
-        # Return file for download
-        from flask import send_file
-        return send_file(resource.file_path, as_attachment=True, download_name=resource.title)
+        # Handle different resource types
+        if resource.type.value == 'text':
+            # For text resources, return the text content as a downloadable file
+            from flask import Response
+            return Response(resource.text_content or 'No content available', 
+                          mimetype='text/plain', 
+                          headers={'Content-Disposition': f'attachment; filename="{resource.title}.txt"'})
+        else:
+            # For file-based resources (PDF, VIDEO, etc.)
+            if not resource.file_path_or_url or not os.path.exists(resource.file_path_or_url):
+                return jsonify({'error': 'File not found'}), 404
+            
+            # Return file for download
+            from flask import send_file
+            return send_file(resource.file_path_or_url, as_attachment=True, download_name=resource.title)
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

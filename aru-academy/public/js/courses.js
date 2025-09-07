@@ -478,7 +478,10 @@ class CoursesService {
      */
     populateCourseSelects(courses) {
         const courseSelects = [
-            'resourceCourse' // in upload resource form
+            'resourceCourse', // in upload resource form
+            'quizCourse', // in create quiz form
+            'importQuizCourse', // in import quiz form
+            'courseContext' // in ai-tutor form
         ];
         
         courseSelects.forEach(selectId => {
@@ -546,8 +549,8 @@ class CoursesService {
                 return;
             }
 
-            const course = courseResponse.course || courseResponse.data;
-            const resources = resourcesResponse.success ? (resourcesResponse.resources || resourcesResponse.data || []) : [];
+            const course = courseResponse.data;
+            const resources = resourcesResponse.resources || [];
 
             // If there are resources, open the first one or show resource list
             if (resources.length > 0) {
@@ -576,7 +579,7 @@ class CoursesService {
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>📚 ${course.title}</h3>
+                    <h3>${course.title}</h3>
                     <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -587,7 +590,7 @@ class CoursesService {
                     </div>
                     
                     <div class="empty-state" style="text-align: center; padding: 2rem; color: #666;">
-                        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📚</div>
+                        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📖</div>
                         <h4>No Resources Available</h4>
                         <p>This course doesn't have any resources yet.</p>
                     </div>
@@ -619,8 +622,8 @@ class CoursesService {
                 return;
             }
 
-            const course = courseResponse.course || courseResponse.data;
-            const resources = resourcesResponse.success ? (resourcesResponse.resources || resourcesResponse.data || []) : [];
+            const course = courseResponse.data;
+            const resources = resourcesResponse.resources || [];
 
             // Create and show resources modal
             this.showResourcesModal(course, resources);
@@ -642,7 +645,7 @@ class CoursesService {
         modal.innerHTML = `
             <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
                 <div class="modal-header">
-                    <h3>📚 ${course.title} - Resources</h3>
+                    <h3>${course.title} - Resources</h3>
                     <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -653,7 +656,7 @@ class CoursesService {
                     </div>
                     
                     <div class="resources-section">
-                        <h4>📁 Course Resources (${resources.length})</h4>
+                        <h4>Course Resources (${resources.length})</h4>
                         ${this.createResourcesList(resources)}
                     </div>
                 </div>
@@ -673,7 +676,7 @@ class CoursesService {
         if (!resources || resources.length === 0) {
             return `
                 <div class="empty-state" style="text-align: center; padding: 2rem; color: #666;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📄</div>
+                    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📋</div>
                     <h4>No Resources Available</h4>
                     <p>This course doesn't have any resources yet.</p>
                 </div>
@@ -707,11 +710,11 @@ class CoursesService {
                     ${resource.description ? `<p style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">${resource.description}</p>` : ''}
                     <div class="resource-actions" style="margin-top: 1rem;">
                         <button class="btn btn-primary btn-sm" onclick="coursesService.openResource(${resource.id}, '${resource.type}', '${resource.file_path_or_url || ''}', '${resource.title}')">
-                            👁️ View Resource
+                            View Resource
                         </button>
                         ${resource.file_path_or_url ? `
                             <button class="btn btn-outline btn-sm" onclick="coursesService.downloadResource('${resource.file_path_or_url}', '${resource.title}')">
-                                ⬇️ Download
+                                Download
                             </button>
                         ` : ''}
                     </div>
@@ -725,14 +728,19 @@ class CoursesService {
      */
     getResourceTypeIcon(type) {
         const icons = {
-            'PDF': '📄',
-            'TEXT': '📝',
-            'VIDEO': '🎥',
-            'LINK': '🔗',
-            'DOCUMENT': '📋',
-            'IMAGE': '🖼️'
+            'PDF': 'PDF',
+            'TEXT': 'TEXT',
+            'VIDEO': 'VIDEO',
+            'LINK': 'LINK',
+            'DOCUMENT': 'DOC',
+            'PRESENTATION': 'PPT',
+            'SPREADSHEET': 'XLS',
+            'IMAGE': 'IMG',
+            'AUDIO': 'AUD',
+            'ARCHIVE': 'ZIP',
+            'CODE': 'CODE'
         };
-        return icons[type] || '📄';
+        return icons[type] || 'FILE';
     }
 
     /**
@@ -760,7 +768,7 @@ class CoursesService {
         }
 
         // Open resource in file viewer
-        const viewerUrl = `file-viewer.html?resource_id=${resourceId}&type=${resourceType}&file=${encodeURIComponent(filePath)}&title=${encodeURIComponent(resourceTitle)}`;
+        const viewerUrl = `file-viewer.html?id=${resourceId}&type=${resourceType}&file=${encodeURIComponent(filePath)}&title=${encodeURIComponent(resourceTitle)}`;
         window.open(viewerUrl, '_blank');
     }
 

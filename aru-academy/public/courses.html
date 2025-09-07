@@ -60,10 +60,10 @@
                     </div>
                     <div class="header-actions" id="instructorActions" style="display: none;">
                         <button class="btn btn-primary" id="createCourseBtn">
-                            <span class="icon">➕</span> Create Course
+                            Create Course
                         </button>
                         <button class="btn btn-outline" id="uploadResourceBtn">
-                            <span class="icon">📁</span> Upload Resource
+                            Upload Resource
                         </button>
                     </div>
                 </div>
@@ -71,8 +71,8 @@
                 <!-- Search and Filters -->
                 <div class="filters-section">
                     <div class="search-box">
-                        <input type="text" id="searchInput" placeholder="🔍 Search courses, topics, or instructors...">
-                        <button class="search-btn">🔍</button>
+                        <input type="text" id="searchInput" placeholder="Search courses, topics, or instructors...">
+                        <button class="search-btn">Search</button>
                     </div>
                     <div class="filter-options">
                         <select id="departmentFilter">
@@ -83,16 +83,16 @@
                             <option value="4">💼 Business Administration</option>
                         </select>
                         <select id="statusFilter">
-                            <option value="">📊 All Status</option>
-                            <option value="Not Started">⏳ Not Started</option>
-                            <option value="In Progress">🚀 In Progress</option>
-                            <option value="Completed">✅ Completed</option>
+                            <option value="">All Status</option>
+                            <option value="Not Started">Not Started</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
                         </select>
                         <select id="difficultyFilter">
-                            <option value="">🎯 All Levels</option>
-                            <option value="Beginner">🟢 Beginner</option>
-                            <option value="Intermediate">🟡 Intermediate</option>
-                            <option value="Advanced">🔴 Advanced</option>
+                            <option value="">All Levels</option>
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
                         </select>
                     </div>
                 </div>
@@ -252,7 +252,7 @@
         
         // Initialize courses service and load courses
         const coursesService = new CoursesService();
-        coursesService.loadCourses();
+        coursesService.initialize();
 
         // Logout functionality
         document.getElementById('logoutBtn').addEventListener('click', async function(e) {

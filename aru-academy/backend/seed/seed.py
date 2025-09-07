@@ -320,30 +320,160 @@ def create_sample_resources(courses):
         # Create 2-3 resources per course
         for i in range(random.randint(2, 3)):
             if i == 0:
-                # PDF resource
+                # Text resource (Lecture Notes)
                 resource = Resource(
                     title=f'{course.title} - Lecture Notes {i+1}',
-                    type=ResourceType.PDF,
+                    type=ResourceType.TEXT,
                     course_id=course.id,
-                    file_path_or_url=f'/storage/departments/{course.department.name.lower().replace(" ", "_")}/lecture_{i+1}.pdf',
+                    text_content=f'''# {course.title} - Lecture Notes {i+1}
+
+## Overview
+This comprehensive lecture covers the fundamental concepts of {course.title}. 
+
+## Key Topics Covered:
+1. Introduction to {course.title}
+2. Core principles and methodologies
+3. Practical applications
+4. Case studies and examples
+5. Best practices
+
+## Learning Objectives:
+By the end of this lecture, students will be able to:
+- Understand the basic concepts of {course.title}
+- Apply theoretical knowledge to practical scenarios
+- Analyze real-world examples
+- Demonstrate proficiency in key areas
+
+## Detailed Content:
+This lecture provides an in-depth exploration of {course.title}, covering both theoretical foundations and practical applications. Students will gain hands-on experience through various exercises and examples.
+
+The material is designed to build upon previous knowledge while introducing new concepts in a structured manner. Regular practice and review of these notes will help reinforce learning.
+
+## Additional Resources:
+- Recommended readings
+- Practice exercises
+- Online resources
+- Discussion forums
+
+## Assessment:
+Students will be evaluated through:
+- Quizzes and assignments
+- Practical projects
+- Final examination
+- Class participation''',
                     description=f'Comprehensive lecture notes for {course.title}'
                 )
             elif i == 1:
-                # Text resource
+                # Text resource (Study Guide)
                 resource = Resource(
                     title=f'{course.title} - Study Guide',
                     type=ResourceType.TEXT,
                     course_id=course.id,
-                    text_content=f'This is a comprehensive study guide for {course.title}. It covers all the essential topics and provides practice questions for students to test their understanding.',
+                    text_content=f'''# {course.title} - Study Guide
+
+## Study Tips for {course.title}
+
+### 1. Understanding Core Concepts
+- Review fundamental principles regularly
+- Practice with real-world examples
+- Connect theory to practical applications
+
+### 2. Key Topics to Focus On:
+- **Topic 1**: Essential concepts and definitions
+- **Topic 2**: Practical applications and use cases
+- **Topic 3**: Advanced techniques and methodologies
+- **Topic 4**: Industry best practices
+
+### 3. Practice Questions:
+1. What are the main principles of {course.title}?
+2. How would you apply these concepts in a real-world scenario?
+3. What are the advantages and limitations of different approaches?
+4. How does {course.title} relate to other fields of study?
+
+### 4. Recommended Study Schedule:
+- **Week 1-2**: Focus on fundamental concepts
+- **Week 3-4**: Practice with exercises and examples
+- **Week 5-6**: Review and prepare for assessments
+- **Week 7-8**: Advanced topics and applications
+
+### 5. Resources for Further Learning:
+- Online tutorials and documentation
+- Professional journals and articles
+- Industry case studies
+- Peer discussion and collaboration
+
+### 6. Assessment Preparation:
+- Review all lecture notes thoroughly
+- Practice with sample questions
+- Understand marking criteria
+- Prepare for both theoretical and practical components
+
+Remember: Consistent study and practice are key to success in {course.title}!''',
                     description=f'Study guide with key concepts and practice questions'
                 )
             else:
-                # Video resource
+                # Text resource (Video Tutorial - as text content since we don't have actual video files)
                 resource = Resource(
                     title=f'{course.title} - Video Tutorial',
-                    type=ResourceType.VIDEO,
+                    type=ResourceType.TEXT,
                     course_id=course.id,
-                    file_path_or_url=f'/storage/departments/{course.department.name.lower().replace(" ", "_")}/tutorial_{i+1}.mp4',
+                    text_content=f'''# {course.title} - Video Tutorial Content
+
+## Video Tutorial: {course.title} Fundamentals
+
+### Video Overview:
+This tutorial provides a step-by-step walkthrough of the key concepts in {course.title}.
+
+### Video Content Summary:
+
+#### Part 1: Introduction (0:00 - 5:00)
+- Welcome and course overview
+- Learning objectives
+- Prerequisites and expectations
+
+#### Part 2: Core Concepts (5:00 - 15:00)
+- Fundamental principles of {course.title}
+- Key terminology and definitions
+- Basic methodologies
+
+#### Part 3: Practical Examples (15:00 - 25:00)
+- Real-world applications
+- Step-by-step demonstrations
+- Common use cases
+
+#### Part 4: Advanced Topics (25:00 - 35:00)
+- Complex scenarios
+- Best practices
+- Troubleshooting tips
+
+#### Part 5: Summary and Next Steps (35:00 - 40:00)
+- Key takeaways
+- Further learning resources
+- Assignment guidelines
+
+### Interactive Elements:
+- Pause and practice exercises
+- Self-assessment questions
+- Discussion prompts
+
+### Video Quality Notes:
+- High-definition recording
+- Clear audio and visuals
+- Closed captions available
+- Downloadable resources
+
+### Technical Requirements:
+- Modern web browser
+- Stable internet connection
+- Audio/video capabilities
+
+### Additional Resources:
+- Transcript available
+- Related reading materials
+- Practice exercises
+- Discussion forum access
+
+*Note: This is a text representation of the video content. In a real implementation, this would be an actual video file.*''',
                     description=f'Video tutorial covering key concepts in {course.title}'
                 )
             

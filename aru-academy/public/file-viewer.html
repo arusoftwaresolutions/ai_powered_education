@@ -159,7 +159,7 @@
                     ← Back to Course
                 </button>
                 <a href="#" class="download-btn" id="downloadBtn" style="display: none;">
-                    📥 Download
+                    Download
                 </a>
             </div>
         </div>
@@ -213,7 +213,7 @@
             
             // Setup download button
             const downloadBtn = document.getElementById('downloadBtn');
-            if (resource.file_path) {
+            if (resource.file_path_or_url) {
                 downloadBtn.href = `/api/resources/${resource.id}/download`;
                 downloadBtn.style.display = 'inline-flex';
             }
@@ -238,13 +238,31 @@
                 case 'document':
                     displayDocument(resource, contentDiv);
                     break;
+                case 'presentation':
+                    displayPresentation(resource, contentDiv);
+                    break;
+                case 'spreadsheet':
+                    displaySpreadsheet(resource, contentDiv);
+                    break;
+                case 'image':
+                    displayImage(resource, contentDiv);
+                    break;
+                case 'audio':
+                    displayAudio(resource, contentDiv);
+                    break;
+                case 'archive':
+                    displayArchive(resource, contentDiv);
+                    break;
+                case 'code':
+                    displayCode(resource, contentDiv);
+                    break;
                 default:
                     displayUnsupported(resource, contentDiv);
             }
         }
         
         function displayPDF(resource, container) {
-            if (resource.file_path) {
+            if (resource.file_path_or_url) {
                 container.innerHTML = `
                     <iframe src="/api/resources/${resource.id}/view" 
                             type="application/pdf" 
@@ -267,10 +285,10 @@
         }
         
         function displayText(resource, container) {
-            if (resource.content) {
+            if (resource.text_content) {
                 container.innerHTML = `
                     <div class="text-content">
-                        ${resource.content.replace(/\n/g, '<br>')}
+                        ${resource.text_content.replace(/\n/g, '<br>')}
                     </div>
                 `;
             } else {
@@ -285,7 +303,7 @@
         }
         
         function displayVideo(resource, container) {
-            if (resource.file_path) {
+            if (resource.file_path_or_url) {
                 container.innerHTML = `
                     <video controls width="100%" height="70vh">
                         <source src="/api/resources/${resource.id}/view" type="video/mp4">
@@ -312,11 +330,130 @@
                     <h3>Document Viewer</h3>
                     <p>Document viewing is not supported in the browser.</p>
                     <p>Please download the file to view it.</p>
-                    <a href="/api/resources/${resource.id}/download" class="download-btn">
-                        📥 Download Document
-                    </a>
+                     <a href="/api/resources/${resource.id}/download" class="download-btn">
+                         Download Document
+                     </a>
                 </div>
             `;
+        }
+        
+        function displayPresentation(resource, container) {
+            container.innerHTML = `
+                <div class="unsupported-file">
+                    <div class="icon">📊</div>
+                    <h3>Presentation File</h3>
+                    <p>This presentation file (${resource.type}) cannot be viewed directly in the browser.</p>
+                    <p>Please download the file to view it with a compatible application.</p>
+                     <a href="/api/resources/${resource.id}/download" class="download-btn">
+                         Download Presentation
+                     </a>
+                </div>
+            `;
+        }
+        
+        function displaySpreadsheet(resource, container) {
+            container.innerHTML = `
+                <div class="unsupported-file">
+                    <div class="icon">📈</div>
+                    <h3>Spreadsheet File</h3>
+                    <p>This spreadsheet file (${resource.type}) cannot be viewed directly in the browser.</p>
+                    <p>Please download the file to view it with a compatible application.</p>
+                     <a href="/api/resources/${resource.id}/download" class="download-btn">
+                         Download Spreadsheet
+                     </a>
+                </div>
+            `;
+        }
+        
+        function displayImage(resource, container) {
+            if (resource.file_path_or_url) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <img src="/api/resources/${resource.id}/view" 
+                             alt="${resource.title}" 
+                             style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="unsupported-file">
+                        <div class="icon">🖼️</div>
+                        <h3>Image Not Available</h3>
+                        <p>This image file is not available for viewing.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayAudio(resource, container) {
+            if (resource.file_path_or_url) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <div class="icon" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.7;">🎵</div>
+                        <h3>${resource.title}</h3>
+                        <audio controls style="width: 100%; max-width: 500px; margin: 20px 0;">
+                            <source src="/api/resources/${resource.id}/view" type="audio/mpeg">
+                            <source src="/api/resources/${resource.id}/view" type="audio/wav">
+                            <source src="/api/resources/${resource.id}/view" type="audio/ogg">
+                            Your browser does not support the audio element.
+                        </audio>
+                        <p style="color: #666; margin-top: 20px;">Use the controls above to play the audio file.</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="unsupported-file">
+                        <div class="icon">🎵</div>
+                        <h3>Audio File Not Available</h3>
+                        <p>This audio file is not available for playback.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayArchive(resource, container) {
+            container.innerHTML = `
+                <div class="unsupported-file">
+                    <div class="icon">📦</div>
+                    <h3>Archive File</h3>
+                    <p>This archive file (${resource.type}) cannot be viewed directly in the browser.</p>
+                    <p>Please download the file and extract it with a compatible application.</p>
+                     <a href="/api/resources/${resource.id}/download" class="download-btn">
+                         Download Archive
+                     </a>
+                </div>
+            `;
+        }
+        
+        function displayCode(resource, container) {
+            if (resource.file_path_or_url) {
+                container.innerHTML = `
+                    <div style="padding: 20px;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <h4 style="margin: 0; color: #333;">Code File: ${resource.title}</h4>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">Type: ${resource.type.toUpperCase()}</p>
+                        </div>
+                        <div style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; overflow-x: auto;">
+                            <p style="margin: 0; color: #569cd6;">// Loading code content...</p>
+                            <p style="margin: 10px 0 0 0; color: #ce9178;">// This file contains code that should be downloaded and viewed in a code editor.</p>
+                            <p style="margin: 10px 0 0 0; color: #ce9178;">// Click the download button to get the full file.</p>
+                        </div>
+                        <div style="text-align: center; margin-top: 20px;">
+                            <a href="/api/resources/${resource.id}/download" class="download-btn">
+                                Download Code File
+                            </a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="unsupported-file">
+                        <div class="icon">💻</div>
+                        <h3>Code File Not Available</h3>
+                        <p>This code file is not available for viewing.</p>
+                    </div>
+                `;
+            }
         }
         
         function displayUnsupported(resource, container) {
@@ -326,9 +463,9 @@
                     <h3>Unsupported File Type</h3>
                     <p>This file type (${resource.type}) is not supported for viewing.</p>
                     <p>Please download the file to view it.</p>
-                    <a href="/api/resources/${resource.id}/download" class="download-btn">
-                        📥 Download File
-                    </a>
+                     <a href="/api/resources/${resource.id}/download" class="download-btn">
+                         Download File
+                     </a>
                 </div>
             `;
         }
