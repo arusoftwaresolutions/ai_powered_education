@@ -375,7 +375,11 @@
 
         // Show instructor actions if applicable
         if (userRole === 'Instructor' || userRole === 'Admin') {
-            document.getElementById('instructorActions').style.display = 'flex';
+            const instructorActions = document.getElementById('instructorActions');
+            if (instructorActions) {
+                instructorActions.style.display = 'flex';
+                console.log('Instructor actions shown for:', userRole);
+            }
         }
 
         // Show admin link if applicable

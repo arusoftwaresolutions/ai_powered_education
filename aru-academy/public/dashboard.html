@@ -205,9 +205,9 @@
                             </div>
                             <div class="card-content">
                                 <div class="action-buttons">
-                                    <button class="btn btn-primary" onclick="handleCreateCourse()">Create Course</button>
-                                    <button class="btn btn-outline" onclick="handleUploadResource()">Upload Resource</button>
-                                    <button class="btn btn-outline" onclick="handleCreateQuiz()">Create Quiz</button>
+                                    <button id="createCourseBtn" class="btn btn-primary" onclick="handleCreateCourse()">Create Course</button>
+                                    <button id="uploadResourceBtn" class="btn btn-outline" onclick="handleUploadResource()">Upload Resource</button>
+                                    <button id="createQuizBtn" class="btn btn-outline" onclick="handleCreateQuiz()">Create Quiz</button>
                                 </div>
                             </div>
                         </div>
@@ -376,6 +376,44 @@
                 showAlert('Failed to load dashboard data. Please refresh the page.', 'error');
             }
         }
+
+        // Add event listeners for instructor buttons after dashboard loads
+        setTimeout(function() {
+            const createCourseBtn = document.getElementById('createCourseBtn');
+            const uploadResourceBtn = document.getElementById('uploadResourceBtn');
+            const createQuizBtn = document.getElementById('createQuizBtn');
+            
+            console.log('Looking for buttons:', {
+                createCourseBtn: !!createCourseBtn,
+                uploadResourceBtn: !!uploadResourceBtn,
+                createQuizBtn: !!createQuizBtn
+            });
+            
+            if (createCourseBtn) {
+                createCourseBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Create Course button clicked via event listener');
+                    handleCreateCourse();
+                });
+                console.log('Create Course button event listener added');
+            }
+            if (uploadResourceBtn) {
+                uploadResourceBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Upload Resource button clicked via event listener');
+                    handleUploadResource();
+                });
+                console.log('Upload Resource button event listener added');
+            }
+            if (createQuizBtn) {
+                createQuizBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Create Quiz button clicked via event listener');
+                    handleCreateQuiz();
+                });
+                console.log('Create Quiz button event listener added');
+            }
+        }, 1000);
 
         async function loadStudentDashboard() {
             try {
@@ -560,6 +598,11 @@
         // Initialize dashboard
         loadDashboardData();
 
+        // Make functions globally accessible
+        window.handleCreateCourse = handleCreateCourse;
+        window.handleUploadResource = handleUploadResource;
+        window.handleCreateQuiz = handleCreateQuiz;
+
         // Add event listeners for dashboard action buttons
         document.addEventListener('click', function(e) {
             if (e.target.textContent === 'Start Learning') {
@@ -651,6 +694,7 @@
 
         // Instructor action functions
         function handleCreateCourse() {
+            console.log('Create Course button clicked');
             // Create a modal for course creation
             const modal = document.createElement('div');
             modal.className = 'modal-overlay show';
@@ -696,6 +740,7 @@
         }
 
         function handleUploadResource() {
+            console.log('Upload Resource button clicked');
             // Create a modal for resource upload
             const modal = document.createElement('div');
             modal.className = 'modal-overlay show';
@@ -751,6 +796,7 @@
         }
 
         function handleCreateQuiz() {
+            console.log('Create Quiz button clicked');
             // Create a modal for quiz creation
             const modal = document.createElement('div');
             modal.className = 'modal-overlay show';
@@ -841,24 +887,9 @@
         async function submitCreateCourse() {
             try {
                 const form = document.getElementById('createCourseForm');
-                const title = form.querySelector('#courseTitle').value;
-                const description = form.querySelector('#courseDescription').value;
-                const departmentId = form.querySelector('#courseDepartment').value;
+                const formData = new FormData(form);
                 
-                // Map department ID to department name
-                const departmentNames = {
-                    '1': 'Computer Science',
-                    '2': 'Business Administration', 
-                    '3': 'Engineering'
-                };
-                
-                const courseData = {
-                    title: title,
-                    description: description,
-                    department: departmentNames[departmentId]
-                };
-                
-                const response = await api.post('/api/courses/', courseData);
+                const response = await api.post('/api/courses/', formData);
                 if (response.success) {
                     alert('Course created successfully!');
                     document.querySelector('.modal-overlay').remove();
@@ -900,24 +931,9 @@
         async function submitCreateQuiz() {
             try {
                 const form = document.getElementById('createQuizForm');
-                const title = form.querySelector('#quizTitle').value;
-                const courseId = form.querySelector('#quizCourse').value;
-                const topic = form.querySelector('#quizTopic').value;
-                const description = form.querySelector('#quizDescription').value;
-                const questionCount = form.querySelector('#quizQuestions').value;
-                const type = form.querySelector('#quizType').value;
+                const formData = new FormData(form);
                 
-                const quizData = {
-                    title: title,
-                    course_id: parseInt(courseId),
-                    topic: topic,
-                    description: description,
-                    question_count: parseInt(questionCount),
-                    type: type,
-                    questions: [] // Empty for now, will be generated by AI
-                };
-                
-                const response = await api.post('/api/quizzes/', quizData);
+                const response = await api.post('/api/quizzes/', formData);
                 if (response.success) {
                     alert('Quiz created successfully!');
                     document.querySelector('.modal-overlay').remove();

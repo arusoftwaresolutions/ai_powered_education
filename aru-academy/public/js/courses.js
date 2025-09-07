@@ -536,7 +536,6 @@ class CoursesService {
      */
     async openCourseContent(courseId) {
         try {
-            console.log('Opening course content for course ID:', courseId);
             showLoading();
             
             // Fetch course details and resources
@@ -545,20 +544,13 @@ class CoursesService {
                 api.get(`/api/resources/?course_id=${courseId}`)
             ]);
 
-            console.log('Course response:', courseResponse);
-            console.log('Resources response:', resourcesResponse);
-
             if (!courseResponse.success) {
-                console.error('Course response failed:', courseResponse);
                 showAlert('Failed to load course details', 'error');
                 return;
             }
 
             const course = courseResponse.data;
             const resources = resourcesResponse.resources || [];
-            
-            console.log('Course data:', course);
-            console.log('Resources data:', resources);
 
             // If there are resources, open the first one or show resource list
             if (resources.length > 0) {
@@ -617,7 +609,6 @@ class CoursesService {
      */
     async viewCourseResources(courseId) {
         try {
-            console.log('Viewing course resources for course ID:', courseId);
             showLoading();
             
             // Fetch course details and resources
@@ -626,20 +617,13 @@ class CoursesService {
                 api.get(`/api/resources/?course_id=${courseId}`)
             ]);
 
-            console.log('Course response:', courseResponse);
-            console.log('Resources response:', resourcesResponse);
-
             if (!courseResponse.success) {
-                console.error('Course response failed:', courseResponse);
                 showAlert('Failed to load course details', 'error');
                 return;
             }
 
             const course = courseResponse.data;
             const resources = resourcesResponse.resources || [];
-            
-            console.log('Course data:', course);
-            console.log('Resources data:', resources);
 
             // Create and show resources modal
             this.showResourcesModal(course, resources);

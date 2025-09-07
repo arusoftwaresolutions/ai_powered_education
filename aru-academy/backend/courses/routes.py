@@ -170,15 +170,26 @@ def create_course():
         if user.role not in [UserRole.INSTRUCTOR, UserRole.ADMIN]:
             return jsonify({'error': 'Only instructors and admins can create courses'}), 403
         
-        data = request.get_json()
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
         
-        if not all(key in data for key in ['title', 'description', 'department']):
-            return jsonify({'error': 'Title, description, and department are required'}), 400
+        # Handle department field (can be name or ID)
+        department = None
+        if 'department' in data:
+            # Department name provided
+            department = Department.query.filter_by(name=data['department']).first()
+        elif 'department_id' in data:
+            # Department ID provided
+            department = Department.query.get(data['department_id'])
         
-        # Get department
-        department = Department.query.filter_by(name=data['department']).first()
         if not department:
             return jsonify({'error': 'Invalid department'}), 400
+        
+        if not all(key in data for key in ['title', 'description']):
+            return jsonify({'error': 'Title and description are required'}), 400
         
         # Check if instructor can create course in this department
         if user.role == UserRole.INSTRUCTOR and user.department_id != department.id:

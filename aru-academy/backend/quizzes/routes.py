@@ -90,10 +90,19 @@ def create_quiz():
         if user.role not in [UserRole.INSTRUCTOR, UserRole.ADMIN]:
             return jsonify({'error': 'Only instructors and admins can create quizzes'}), 403
         
-        data = request.get_json()
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+            # Convert string values to appropriate types
+            if 'course_id' in data:
+                data['course_id'] = int(data['course_id'])
+            if 'question_count' in data:
+                data['question_count'] = int(data['question_count'])
         
-        if not all(key in data for key in ['title', 'course_id', 'topic', 'questions']):
-            return jsonify({'error': 'Title, course_id, topic, and questions are required'}), 400
+        if not all(key in data for key in ['title', 'course_id', 'topic']):
+            return jsonify({'error': 'Title, course_id, and topic are required'}), 400
         
         # Verify course exists and user has access
         course = Course.query.get(data['course_id'])
